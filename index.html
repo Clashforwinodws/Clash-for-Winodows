@@ -14,13 +14,109 @@
 
   <!-- 移动端适配 -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+   <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+    h1 {
+      text-align: center;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 20px 0;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 12px;
+      text-align: center;
+    }
+    th {
+      background-color: #f4f4f4;
+    }
+    .download-btn {
+      display: inline-block;
+      padding: 8px 16px;
+      background-color: #0078d7;
+      color: #fff;
+      text-decoration: none;
+      border-radius: 4px;
+      transition: background-color 0.3s;
+    }
+    .download-btn:hover {
+      background-color: #005a9e;
+    }
+
+    /* 响应式设计 */
+    @media (max-width: 768px) {
+      table, thead, tbody, th, td, tr {
+        display: block;
+      }
+      thead tr {
+        display: none;
+      }
+      tr {
+        margin-bottom: 15px;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        padding: 10px;
+      }
+      td {
+        border: none;
+        text-align: left;
+        padding: 8px;
+      }
+      td::before {
+        content: attr(data-label);
+        font-weight: bold;
+        display: block;
+        margin-bottom: 4px;
+      }
+    }
+  </style>
 </head>
 <body>
   <header>
     <h1>Clash下载中心</h1>
     <p>Clash开源社区下载站提供 Windows、macOS、Linux 与 Android 平台最新版 Clash 客户端下载</p>
   </header>
-
+<table>
+    <thead>
+      <tr>
+        <th>名称</th>
+        <th>平台</th>
+        <th>下载链接</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td data-label="名称">Clash for Windows</td>
+        <td data-label="平台">Windows</td>
+        <td data-label="下载链接"><a class="download-btn" href="https://github.com/Fndroid/clash_for_windows_pkg/releases" target="_blank">下载</a></td>
+      </tr>
+      <tr>
+        <td data-label="名称">ClashX</td>
+        <td data-label="平台">macOS</td>
+        <td data-label="下载链接"><a class="download-btn" href="https://github.com/yichengchen/clashX/releases" target="_blank">下载</a></td>
+      </tr>
+      <tr>
+        <td data-label="名称">Clash for Linux</td>
+        <td data-label="平台">Linux</td>
+        <td data-label="下载链接"><a class="download-btn" href="https://github.com/Dreamacro/clash/releases" target="_blank">下载</a></td>
+      </tr>
+      <tr>
+        <td data-label="名称">Clash for Android</td>
+        <td data-label="平台">Android</td>
+        <td data-label="下载链接"><a class="download-btn" href="https://github.com/Kr328/ClashForAndroid/releases" target="_blank">下载</a></td>
+      </tr>
+      <tr>
+        <td data-label="名称">Clash for iOS</td>
+        <td data-label="平台">iOS</td>
+        <td data-label="下载链接"><a class="download-btn" href="https://apps.apple.com/app/clashx/id1481302438" target="_blank">下载</a></td>
+      </tr>
+    </tbody>
+  </table>
   <main>
     <section>
       <h2>关于Clash</h2>
