@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://clashforwinodws.github.io/Clash-for-Winodows/sitemap.xml
