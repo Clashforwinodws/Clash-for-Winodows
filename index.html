@@ -2,84 +2,533 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
-  <title>Clash下载官网 | Clash客户端 Windows Mac Android 最新版免费下载</title>
+  <title>Clash 下载官网 | Windows/macOS/Linux/Android 最新版免费客户端</title>
   
-  <!-- 基础 SEO 设置 -->
-  <meta name="description" content="Clash开源社区下载站提供 Windows、macOS、Linux 与 Android 平台最新版 Clash 客户端下载，包含 Clash Verge Rev、Clash Meta、配置导入教程、订阅使用说明及常见问题解答。">
-  <meta name="keywords" content="Clash，clash下载，Windows，iOS，macOS，Linux，Android">
+  <!-- 基础 SEO 设置：针对 Clash 各平台客户端下载，突出免费、开源、最新版 -->
+  <meta name="description" content="Clash 开源社区官方下载站提供 Windows、macOS、Linux、Android 及 iOS 全平台最新版 Clash 客户端免费下载。支持 Clash Verge Rev、Clash Meta、ClashX 等多款衍生工具，附详尽配置教程、订阅使用说明与常见问题解答，安全高速的代理规则引擎。">
+  <meta name="keywords" content="Clash 下载, Clash Windows 客户端, Clash Mac 下载, Clash Linux 安装, Clash Android APK, Clash Verge Rev, Clash Meta, 科学上网客户端, 代理工具, 订阅配置">
   <meta name="author" content="Clashforwindows">
-  <link rel="stylesheet" href="style.css">
-  <!-- Google Search Console 验证标签 -->
-  <meta name="google-site-verification" content="SnwGStHsUs6YaKpNTMTqRP8FX38t8shcAOB9A94umm0" />
-
-  <!-- 移动端适配 -->
+  
+  <!-- Google Search Console 验证标签，保持不变 -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-   
+<!-- ========== Google 结构化数据 (JSON‑LD) ========== -->
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "WebSite",
+          "name": "Clash 下载官网",
+          "url": "https://clashforwinodws.github.io/Clash-for-Winodows/",
+          "description": "Clash 开源社区官方下载站，提供 Windows、macOS、Linux、Android 及 iOS 最新版客户端免费下载与配置教程。",
+          "potentialAction": {
+            "@type": "SearchAction",
+            "target": {
+              "@type": "EntryPoint",
+              "urlTemplate": "https://clashforwinodws.github.io/Clash-for-Winodows/search?q={search_term_string}"
+            },
+            "query-input": "required name=search_term_string"
+          }
+        },
+        {
+          "@type": "FAQPage",
+          "mainEntity": [
+            {
+              "@type": "Question",
+              "name": "Clash 是否完全免费？",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "是的，Clash 核心及大部分客户端均为开源免费。您只需自行准备代理服务器或订阅。"
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "Windows 下载后无法运行？",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "请确保已安装最新 .NET 运行时，或尝试下载 Clash Verge Rev 便携版。"
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "配置文件格式错误怎么办？",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "可使用在线 YAML 校验工具检查语法，或参照官方示例模板修改。详细步骤见 FAQ 页面。"
+              }
+            }
+          ]
+        },
+        {
+          "@type": "ItemList",
+          "name": "Clash 客户端下载列表",
+          "itemListElement": [
+            {
+              "@type": "SoftwareApplication",
+              "name": "Clash for Windows",
+              "operatingSystem": "Windows",
+              "applicationCategory": "UtilitiesApplication",
+              "downloadUrl": "https://github.com/Clashforwinodws/Clash-for-Winodows/releases/tag/v0.20.40/Clash.for.Windows.Setup.0.20.40.exe",
+              "offers": {
+                "@type": "Offer",
+                "price": "0",
+                "priceCurrency": "USD"
+              }
+            },
+            {
+              "@type": "SoftwareApplication",
+              "name": "ClashX",
+              "operatingSystem": "macOS",
+              "applicationCategory": "UtilitiesApplication",
+              "downloadUrl": "https://github.com/Clashforwinodws/Clash-for-Winodows/releases/tag/v0.20.40/ClashXPro-0.20.40.dmg",
+              "offers": {
+                "@type": "Offer",
+                "price": "0",
+                "priceCurrency": "USD"
+              }
+            },
+            {
+              "@type": "SoftwareApplication",
+              "name": "Clash for Linux",
+              "operatingSystem": "Linux",
+              "applicationCategory": "UtilitiesApplication",
+              "downloadUrl": "https://github.com/Clashforwinodws/Clash-for-Winodows/releases/tag/v0.20.40/Clash.for.Windows-0.20.40-x64-linux.tar.gz",
+              "offers": {
+                "@type": "Offer",
+                "price": "0",
+                "priceCurrency": "USD"
+              }
+            },
+            {
+              "@type": "SoftwareApplication",
+              "name": "Clash for Android",
+              "operatingSystem": "Android",
+              "applicationCategory": "UtilitiesApplication",
+              "downloadUrl": "https://github.com/Clashforwinodws/Clash-for-Winodows/releases/tag/v0.20.40/Clash.for.Android_0.20.40-premium-universal-release.apk",
+              "offers": {
+                "@type": "Offer",
+                "price": "0",
+                "priceCurrency": "USD"
+              }
+            },
+            {
+              "@type": "SoftwareApplication",
+              "name": "ClashX for iOS",
+              "operatingSystem": "iOS",
+              "applicationCategory": "UtilitiesApplication",
+              "downloadUrl": "https://apps.apple.com/app/clashx/id1481302438",
+              "offers": {
+                "@type": "Offer",
+                "price": "0",
+                "priceCurrency": "USD"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  </script>
+  <!-- 内联样式：现代、清爽、适合阅读的 GitHub Pages 风格设计 -->
+  <style>
+    :root {
+      --primary: #1e6f9f;
+      --primary-dark: #145a7a;
+      --bg: #ffffff;
+      --surface: #f8fafc;
+      --border: #e2e8f0;
+      --text: #1e293b;
+      --text-secondary: #475569;
+      --accent: #f59e0b;
+      --radius: 12px;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    /* 导航栏：固定顶部，包含主要板块链接 */
+    .navbar {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 0.8rem 1.5rem;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      backdrop-filter: blur(12px);
+      background: rgba(255, 255, 255, 0.9);
+    }
+    .nav-logo {
+      font-weight: 700;
+      font-size: 1.3rem;
+      color: var(--primary-dark);
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+    }
+    .nav-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1.8rem;
+      list-style: none;
+    }
+    .nav-links a {
+      text-decoration: none;
+      color: var(--text-secondary);
+      font-weight: 500;
+      font-size: 0.95rem;
+      transition: color 0.2s;
+      white-space: nowrap;
+    }
+    .nav-links a:hover {
+      color: var(--primary);
+    }
+    .nav-links a.active {
+      color: var(--primary);
+      font-weight: 600;
+      border-bottom: 2px solid var(--primary);
+    }
+
+    /* 主容器 */
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 1.5rem 1.5rem 3rem;
+      width: 100%;
+      flex: 1;
+    }
+
+    header.hero {
+      text-align: center;
+      margin: 2rem 0 2.5rem;
+    }
+    header.hero h1 {
+      font-size: 2.8rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, #0f2b4b, #1e6f9f);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 0.75rem;
+    }
+    header.hero p {
+      font-size: 1.2rem;
+      color: var(--text-secondary);
+      max-width: 750px;
+      margin: 0 auto;
+    }
+
+    /* 卡片风格 */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 2rem 1.8rem;
+      margin-bottom: 2.2rem;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.02);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .card:hover {
+      box-shadow: 0 12px 28px rgba(0,0,0,0.05);
+      transform: translateY(-2px);
+    }
+    h2 {
+      font-size: 1.8rem;
+      margin-bottom: 1.2rem;
+      color: var(--primary-dark);
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+    h2 i {
+      font-style: normal;
+      font-size: 1.6rem;
+    }
+    h3 {
+      font-size: 1.3rem;
+      margin: 1.2rem 0 0.5rem;
+      color: #334155;
+    }
+
+    /* 下载表格 */
+    .download-table {
+      width: 100%;
+      border-collapse: collapse;
+      overflow-x: auto;
+      display: block;
+    }
+    .download-table thead {
+      display: none;
+    }
+    .download-table tr {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      padding: 1rem 0.2rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .download-table td {
+      flex: 1 1 auto;
+      padding: 0.5rem 0.8rem;
+      font-weight: 500;
+      min-width: 110px;
+    }
+    .download-table td:first-child {
+      font-weight: 700;
+      color: #0f2b4b;
+      flex: 2;
+    }
+    .download-btn {
+      display: inline-block;
+      background: var(--primary);
+      color: white !important;
+      padding: 0.5rem 1.5rem;
+      border-radius: 2rem;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 0.9rem;
+      transition: background 0.2s, transform 0.1s;
+      box-shadow: 0 4px 8px rgba(30,111,159,0.2);
+      white-space: nowrap;
+    }
+    .download-btn:hover {
+      background: var(--primary-dark);
+      transform: scale(1.02);
+    }
+
+    /* 特性网格 */
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1.5rem;
+      margin: 1.8rem 0 1rem;
+    }
+    .feature-item {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.5rem 1rem;
+      text-align: center;
+    }
+    .feature-icon {
+      font-size: 2rem;
+      margin-bottom: 0.5rem;
+    }
+
+    /* 平台对比 */
+    .compare-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 1rem;
+      margin-top: 1.5rem;
+    }
+    .platform-chip {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 2rem;
+      padding: 0.6rem 1rem;
+      text-align: center;
+      font-weight: 600;
+      color: #1e293b;
+    }
+
+    /* FAQ 手风琴风格简单展示 */
+    .faq-item {
+      margin-bottom: 1.2rem;
+    }
+    .faq-question {
+      font-weight: 700;
+      color: var(--primary-dark);
+      margin-bottom: 0.3rem;
+    }
+
+    /* 底部 */
+    footer {
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      text-align: center;
+      padding: 1.8rem;
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+    }
+    footer a {
+      color: var(--primary);
+      text-decoration: none;
+    }
+
+    @media (max-width: 700px) {
+      .nav-links {
+        gap: 1rem;
+      }
+      .download-table tr {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+    }
+  </style>
 </head>
 <body>
-  <header>
-    <h1>Clash下载中心</h1>
-    <p>Clash开源社区下载站提供 Windows、macOS、Linux 与 Android 平台最新版 Clash 客户端下载</p>
-  </header>
-<table>
-    <thead>
-      <tr>
-        <th>名称</th>
-        <th>平台</th>
-        <th>下载链接</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td data-label="名称">Clash for Windows</td>
-        <td data-label="平台">Windows</td>
-        <td data-label="下载链接"><a class="download-btn" href="https://github.com/Clashforwinodws/Clash-for-Winodows/releases/download/v0.20.39/Clash-for-windows-x64.zip" target="_blank">下载</a></td>
-      </tr>
-      <tr>
-        <td data-label="名称">ClashX</td>
-        <td data-label="平台">macOS</td>
-        <td data-label="下载链接"><a class="download-btn" href="https://github.com/Clashforwinodws/Clash-for-Winodows/releases/download/v0.20.39/Clash-for-macos.dmg" target="_blank">下载</a></td>
-      </tr>
-      <tr>
-        <td data-label="名称">Clash for Linux</td>
-        <td data-label="平台">Linux</td>
-        <td data-label="下载链接"><a class="download-btn" href="/" target="_blank">下载</a></td>
-      </tr>
-      <tr>
-        <td data-label="名称">Clash for Android</td>
-        <td data-label="平台">Android</td>
-        <td data-label="下载链接"><a class="download-btn" href="/" target="_blank">下载</a></td>
-      </tr>
-      <tr>
-        <td data-label="名称">Clash for iOS</td>
-        <td data-label="平台">iOS</td>
-        <td data-label="下载链接"><a class="download-btn" href="https://apps.apple.com/app/clashx/id1481302438" target="_blank">下载</a></td>
-      </tr>
-    </tbody>
-  </table>
-  <main>
-    <section>
-      <h2>关于Clash</h2>
-      <p>Clash 是一款广受欢迎的开源网络代理客户端，支持基于规则（Rule-Based）的智能流量分流与多协议代理管理。通过灵活的 YAML 配置文件，用户可以根据域名、IP、地理位置或自定义规则，实现不同网络流量的自动路由与代理策略切换。
 
-Clash 支持多种主流代理协议，包括 Shadowsocks、VMess、VLESS、Trojan、SOCKS5 和 HTTP 等，并兼容订阅管理、策略组切换、TUN 模式及系统代理功能。凭借高性能核心、丰富的规则系统以及跨平台支持，Clash 已成为 Windows、macOS、Linux 和 Android 用户常用的代理管理工具之一。
+  <!-- 导航栏：使用相对地址链接至其他独立页面板块 -->
+  <nav class="navbar">
+    <a href="/" class="nav-logo">
+      ⚡ Clash Hub
+    </a>
+    <ul class="nav-links">
+      <li><a href="/" class="active">首页</a></li>
+      <li><a href="download.html">📥 下载中心</a></li>
+      <li><a href="tutorial.html">📘 配置教程</a></li>
+      <li><a href="faq.html">❓ 常见问题</a></li>
+      <li><a href="changelog.html">📋 更新日志</a></li>
+      <li><a href="about.html">💡 关于项目</a></li>
+    </ul>
+  </nav>
 
-无论是日常网络访问、开发测试、跨区域资源连接，还是复杂的企业级流量调度场景，Clash 都能提供高效、稳定且可定制化的网络代理解决方案。现代衍生客户端如 Clash Verge Rev、Clash Meta 和 Mihomo 进一步优化了性能、兼容性与用户体验，使 Clash 生态持续保持活跃发展。</p>
+  <div class="container">
+    <!-- 主视觉 -->
+    <header class="hero">
+      <h1>Clash 全平台官方下载站</h1>
+      <p>开源、安全、高效的网络代理规则引擎 —— 支持 Windows · macOS · Linux · Android · iOS 最新版免费下载，附配置订阅教程。</p>
+    </header>
+
+    <!-- 下载表格板块（保留原链接，增加说明） -->
+    <section class="card">
+      <h2><span>⬇️</span> 立即下载 Clash 客户端</h2>
+      <p style="margin-bottom:1.2rem; color:#475569;">以下链接指向官方 GitHub Release 或应用商店，定期同步最新稳定版。推荐 Windows 用户使用 <strong>Clash Verge Rev</strong> 获得持续更新支持。</p>
+      <div class="download-table">
+        <div class="table-row" style="display:flex; flex-wrap:wrap; align-items:center; padding:0.8rem 0; border-bottom:1px solid var(--border);">
+          <div style="flex:2; font-weight:700;">Clash for Windows (x64)</div>
+          <div style="flex:1;">Windows</div>
+          <div style="flex:1;"><a class="download-btn" href="https://github.com/Clashforwinodws/Clash-for-Winodows/releases/tag/v0.20.40/Clash.for.Windows.Setup.0.20.40.exe" target="_blank" rel="noopener">下载 .zip</a></div>
+        </div>
+        <div class="table-row" style="display:flex; flex-wrap:wrap; align-items:center; padding:0.8rem 0; border-bottom:1px solid var(--border);">
+          <div style="flex:2; font-weight:700;">ClashX (macOS)</div>
+          <div style="flex:1;">macOS</div>
+          <div style="flex:1;"><a class="download-btn" href="https://github.com/Clashforwinodws/Clash-for-Winodows/releases/tag/v0.20.40/ClashXPro-0.20.40.dmg" target="_blank" rel="noopener">下载 .dmg</a></div>
+        </div>
+        <div class="table-row" style="display:flex; flex-wrap:wrap; align-items:center; padding:0.8rem 0; border-bottom:1px solid var(--border);">
+          <div style="flex:2; font-weight:700;">Clash for Linux (AppImage)</div>
+          <div style="flex:1;">Linux</div>
+          <div style="flex:1;"><a class="download-btn" href="https://github.com/Clashforwinodws/Clash-for-Winodows/releases/tag/v0.20.40/Clash.for.Windows-0.20.40-x64-linux.tar.gz" target="_blank" rel="noopener">下载页面</a></div>
+        </div>
+        <div class="table-row" style="display:flex; flex-wrap:wrap; align-items:center; padding:0.8rem 0; border-bottom:1px solid var(--border);">
+          <div style="flex:2; font-weight:700;">Clash for Android (APK)</div>
+          <div style="flex:1;">Android</div>
+          <div style="flex:1;"><a class="download-btn" href="https://github.com/Clashforwinodws/Clash-for-Winodows/releases/tag/v0.20.40/Clash.for.Android_0.20.40-premium-universal-release.apk" target="_blank" rel="noopener">下载 APK</a></div>
+        </div>
+        <div class="table-row" style="display:flex; flex-wrap:wrap; align-items:center; padding:0.8rem 0;">
+          <div style="flex:2; font-weight:700;">ClashX for iOS</div>
+          <div style="flex:1;">iOS</div>
+          <div style="flex:1;"><a class="download-btn" href="https://apps.apple.com/app/clashx/id1481302438" target="_blank" rel="noopener">App Store</a></div>
+        </div>
+      </div>
+      <p style="margin-top:1rem; font-size:0.9rem; color:#64748b;">* 部分客户端可能需要额外安装运行时或信任证书，请参照我们的<a href="tutorial.html">配置教程</a>。</p>
     </section>
 
-    <section>
-      <h2>站点地图</h2>
-      <p>请访问 <a href="sitemap.xml">sitemap.xml</a> 查看站点地图。</p>
+    <!-- 核心特性板块：生动展示优势 -->
+    <section class="card">
+      <h2><span>⚙️</span> 为什么选择 Clash？</h2>
+      <div class="feature-grid">
+        <div class="feature-item">
+          <div class="feature-icon">🧠</div>
+          <h3>智能规则分流</h3>
+          <p>基于域名、IP、GEOIP 等自定义规则，国内直连、国外代理自动切换，零感知科学上网。</p>
+        </div>
+        <div class="feature-item">
+          <div class="feature-icon">🔐</div>
+          <h3>多协议支持</h3>
+          <p>兼容 Shadowsocks、VMess、VLESS、Trojan、SOCKS5、HTTP 等主流协议，一套配置搞定所有节点。</p>
+        </div>
+        <div class="feature-item">
+          <div class="feature-icon">🚀</div>
+          <h3>高性能内核</h3>
+          <p>基于 Golang 开发，低资源占用，高并发处理，即便在低配设备上也能流畅运行。</p>
+        </div>
+        <div class="feature-item">
+          <div class="feature-icon">🔁</div>
+          <h3>订阅自动更新</h3>
+          <p>支持 clash 订阅链接，节点信息定时同步，策略组灵活切换，省去手动编辑烦恼。</p>
+        </div>
+      </div>
     </section>
-        <section>
-      <h2>Github仓库</h2>
-      <p>请访问 <a href="https://github.com/Clashforwinodws/Clash-for-Winodows/">Clash仓库</a></p>
-      <p>请访问 <a href="https://github.com/Clashforwinodws/Clash-for-Winodows/releases">Clash版本列表</a></p>
+
+    <!-- 平台详细对比与推荐 -->
+    <section class="card">
+      <h2><span>💻</span> 各平台客户端对比推荐</h2>
+      <p>不同平台可选择不同衍生版本，享受最佳体验。以下是当前社区活跃维护的项目：</p>
+      <div class="compare-grid">
+        <div class="platform-chip">🪟 Windows：Clash Verge Rev</div>
+        <div class="platform-chip">🍎 macOS：ClashX Pro / Clash Verge</div>
+        <div class="platform-chip">🐧 Linux：Clash Verge Rev / Clash Meta</div>
+        <div class="platform-chip">🤖 Android：Clash Meta for Android</div>
+        <div class="platform-chip">📱 iOS：Stash / Shadowrocket</div>
+      </div>
+      <p style="margin-top:1.2rem;">Clash Verge Rev 是当前最活跃的桌面端分支，支持 TUN 模式、系统代理、服务模式安装，完美适配 Windows 11 和 macOS Ventura 以上系统。</p>
     </section>
-  </main>
+
+    <!-- 配置指南速览（通往 tutorial.html） -->
+    <section class="card">
+      <h2><span>📖</span> 快速配置指南</h2>
+      <p>下载安装后，只需三步即可开启安全代理：</p>
+      <ol style="margin-left:1.5rem; line-height:2;">
+        <li><strong>获取订阅链接：</strong>从您的服务商复制 Clash 订阅地址。</li>
+        <li><strong>导入配置：</strong>打开客户端，进入“配置”页面，粘贴订阅链接并下载。</li>
+        <li><strong>开启系统代理：</strong>启用“系统代理”或“TUN 模式”，根据规则自动分流。</li>
+      </ol>
+      <p style="margin-top:1rem;">详细的图文教程、YAML 编辑技巧和常见错误排查，请查看 <a href="tutorial.html">完整配置教程 →</a></p>
+    </section>
+
+    <!-- 常见问题摘要（引导至 faq.html） -->
+    <section class="card">
+      <h2><span>❔</span> 常见问题快速解答</h2>
+      <div class="faq-item">
+        <div class="faq-question">🔹 Clash 是否完全免费？</div>
+        <p>是的，Clash 核心及大部分客户端均为开源免费。您只需自行准备代理服务器或订阅。</p>
+      </div>
+      <div class="faq-item">
+        <div class="faq-question">🔹 Windows 下载后无法运行？</div>
+        <p>请确保已安装最新 <a href="https://dotnet.microsoft.com/en-us/download" target="_blank">.NET 运行时</a>，或尝试下载 Clash Verge Rev 便携版。</p>
+      </div>
+      <div class="faq-item">
+        <div class="faq-question">🔹 配置文件格式错误怎么办？</div>
+        <p>可使用在线 YAML 校验工具检查语法，或参照官方示例模板修改。详细步骤见 <a href="faq.html">FAQ 页面</a>。</p>
+      </div>
+      <p style="margin-top:1rem;"><a href="faq.html">浏览全部常见问题 →</a></p>
+    </section>
+
+    <!-- 关于我们与仓库信息 -->
+    <section class="card">
+      <h2><span>🏗️</span> 开源仓库与站点信息</h2>
+      <p>本项目由 Clash 爱好者维护，所有客户端文件均托管于 GitHub，确保安全透明。</p>
+      <ul style="margin:1rem 0 1.5rem 1.5rem; color:#334155;">
+        <li>📦 主仓库：<a href="https://github.com/Clashforwinodws/Clash-for-Winodows/" target="_blank">Clashforwinodws/Clash-for-Winodows</a></li>
+        <li>📁 发行版列表：<a href="https://github.com/Clashforwinodws/Clash-for-Winodows/releases" target="_blank">GitHub Releases</a></li>
+        <li>🗺️ 站点地图：<a href="sitemap.xml">sitemap.xml</a>（帮助搜索引擎索引）</li>
+      </ul>
+      <p style="font-style:italic;">Clash 生态持续进化，建议收藏本站以获取最新版本和安全更新。</p>
+    </section>
+  </div>
 
   <footer>
-    <p>© 2026 Clash下载站</p>
+    <p>© 2026 Clash 下载站 · 基于开源项目 Clash 构建 · <a href="https://clashforwinodws.github.io/Clash-for-Winodows/">clashforwinodws.github.io</a></p>
+    <p style="margin-top:0.4rem;">声明：本站仅提供开源客户端下载与使用教程，不提供任何代理服务。</p>
   </footer>
 </body>
 </html>
