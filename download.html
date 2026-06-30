@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>Clash 下载中心 · 全平台客户端 v0.20.40 免费下载 | Windows macOS Linux Android iOS</title>
+  
+  <!-- SEO：独立下载页面，关键词聚焦各平台安装包与最新版本 -->
+  <meta name="description" content="Clash 下载中心提供 Windows、macOS、Linux、Android 及 iOS 全平台最新版 Clash 客户端安装包免费下载，版本 v0.20.40，含 EXE、DMG、AppImage、APK。支持 Clash Verge Rev 衍生版，附安装教程与校验码，安全稳定的代理规则引擎。">
+  <meta name="keywords" content="Clash 下载, Clash Windows 安装包, Clash Mac DMG 下载, Clash Linux 安装, Clash Android APK 下载, Clash 最新版, Clash Verge Rev 下载, Clash 客户端, 代理工具下载">
+  <meta name="author" content="Clashforwindows">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <style>
+    :root {
+      --primary: #1e6f9f;
+      --primary-dark: #145a7a;
+      --bg: #ffffff;
+      --surface: #f8fafc;
+      --border: #e2e8f0;
+      --text: #1e293b;
+      --text-secondary: #475569;
+      --accent: #f59e0b;
+      --radius: 12px;
+    }
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+    .navbar {
+      background: rgba(255,255,255,0.9);
+      border-bottom: 1px solid var(--border);
+      padding: 0.8rem 1.5rem;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      backdrop-filter: blur(12px);
+    }
+    .nav-logo {
+      font-weight: 700;
+      font-size: 1.3rem;
+      color: var(--primary-dark);
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+    }
+    .nav-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1.8rem;
+      list-style: none;
+    }
+    .nav-links a {
+      text-decoration: none;
+      color: var(--text-secondary);
+      font-weight: 500;
+      font-size: 0.95rem;
+      transition: color 0.2s;
+      white-space: nowrap;
+    }
+    .nav-links a:hover { color: var(--primary); }
+    .nav-links a.active {
+      color: var(--primary);
+      font-weight: 600;
+      border-bottom: 2px solid var(--primary);
+    }
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 1.5rem 1.5rem 3rem;
+      width: 100%;
+      flex: 1;
+    }
+    .hero {
+      text-align: center;
+      margin: 2rem 0 2.5rem;
+    }
+    .hero h1 {
+      font-size: 2.8rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, #0f2b4b, #1e6f9f);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 0.75rem;
+    }
+    .hero p {
+      font-size: 1.2rem;
+      color: var(--text-secondary);
+      max-width: 750px;
+      margin: 0 auto;
+    }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 2rem 1.8rem;
+      margin-bottom: 2.2rem;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.02);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .card:hover {
+      box-shadow: 0 12px 28px rgba(0,0,0,0.05);
+      transform: translateY(-2px);
+    }
+    h2 {
+      font-size: 1.8rem;
+      margin-bottom: 1.2rem;
+      color: var(--primary-dark);
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+    h3 {
+      font-size: 1.3rem;
+      margin: 1.2rem 0 0.5rem;
+      color: #334155;
+    }
+    .download-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 1.8rem;
+      margin-top: 1.5rem;
+    }
+    .dl-card {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.8rem 1.4rem;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      transition: box-shadow 0.2s;
+    }
+    .dl-card:hover { box-shadow: 0 8px 20px rgba(0,0,0,0.06); }
+    .dl-icon {
+      font-size: 2.4rem;
+      margin-bottom: 0.8rem;
+    }
+    .dl-name {
+      font-weight: 700;
+      font-size: 1.3rem;
+      margin-bottom: 0.3rem;
+    }
+    .dl-version {
+      color: #64748b;
+      font-size: 0.85rem;
+      margin-bottom: 1rem;
+    }
+    .dl-meta {
+      font-size: 0.9rem;
+      color: #475569;
+      margin-bottom: 1rem;
+      line-height: 1.5;
+    }
+    .download-btn {
+      display: inline-block;
+      background: var(--primary);
+      color: white !important;
+      padding: 0.6rem 1.8rem;
+      border-radius: 2rem;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 0.95rem;
+      transition: background 0.2s, transform 0.1s;
+      box-shadow: 0 4px 10px rgba(30,111,159,0.2);
+      margin-top: auto;
+      white-space: nowrap;
+    }
+    .download-btn:hover {
+      background: var(--primary-dark);
+      transform: scale(1.02);
+    }
+    .alt-links {
+      margin-top: 0.8rem;
+      font-size: 0.9rem;
+    }
+    .alt-links a {
+      color: var(--primary);
+      text-decoration: none;
+      margin-right: 1rem;
+    }
+    .highlight-banner {
+      background: linear-gradient(120deg, #e6f0f8, #ffffff);
+      border-left: 4px solid var(--primary);
+      padding: 1.2rem 1.8rem;
+      border-radius: var(--radius);
+      margin-bottom: 2rem;
+    }
+    .checksum-box {
+      background: #1e293b;
+      color: #e2e8f0;
+      padding: 1.2rem;
+      border-radius: var(--radius);
+      font-family: monospace;
+      font-size: 0.9rem;
+      overflow-x: auto;
+      margin: 1rem 0;
+    }
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1.2rem;
+      margin: 1.2rem 0;
+    }
+    .step {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.2rem;
+    }
+    footer {
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      text-align: center;
+      padding: 1.8rem;
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+      margin-top: auto;
+    }
+    footer a { color: var(--primary); text-decoration: none; }
+    @media (max-width: 700px) {
+      .nav-links { gap: 1rem; }
+    }
+  </style>
+</head>
+<body>
+  <nav class="navbar">
+    <a href="/Clash-for-Winodows/" class="nav-logo">⚡ Clash Hub</a>
+    <ul class="nav-links">
+      <li><a href="/Clash-for-Winodows/">首页</a></li>
+      <li><a href="download.html" class="active">📥 下载中心</a></li>
+      <li><a href="tutorial.html">📘 配置教程</a></li>
+      <li><a href="faq.html">❓ 常见问题</a></li>
+      <li><a href="changelog.html">📋 更新日志</a></li>
+      <li><a href="about.html">💡 关于项目</a></li>
+    </ul>
+  </nav>
+
+  <div class="container">
+    <header class="hero">
+      <h1>Clash 全平台下载中心</h1>
+      <p>最新稳定版 v0.20.40 · 免费、开源、无捆绑 · 支持 Windows / macOS / Linux / Android / iOS</p>
+    </header>
+
+    <!-- 版本亮点横幅 -->
+    <div class="highlight-banner">
+      <strong>🎉 v0.20.40 更新亮点：</strong> 优化 TUN 模式性能，修复订阅更新偶发失败问题，增强对 Clash Meta 内核的兼容性，更新内置规则集。建议所有用户升级到此版本。
+    </div>
+
+    <!-- 主要下载卡片网格 -->
+    <section class="card">
+      <h2><span>⬇️</span> 选择您的平台开始下载</h2>
+      <div class="download-grid">
+        <!-- Windows -->
+        <div class="dl-card">
+          <div class="dl-icon">🪟</div>
+          <div class="dl-name">Clash for Windows</div>
+          <div class="dl-version">v0.20.40 · 安装版</div>
+          <div class="dl-meta">
+            <div>系统：Windows 10/11 (x64)</div>
+            <div>大小：约 85 MB</div>
+            <div>格式：.exe 安装程序</div>
+          </div>
+          <a class="download-btn" href="https://github.com/Clashforwinodws/Clash-for-Winodows/releases/tag/v0.20.40/Clash.for.Windows.Setup.0.20.40.exe" target="_blank" rel="noopener">下载 .exe</a>
+          <div class="alt-links">
+            <a href="#">便携版 .zip</a> · <a href="changelog.html">更新日志</a>
+          </div>
+        </div>
+        <!-- macOS -->
+        <div class="dl-card">
+          <div class="dl-icon">🍎</div>
+          <div class="dl-name">ClashX Pro (macOS)</div>
+          <div class="dl-version">v0.20.40 · DMG 映像</div>
+          <div class="dl-meta">
+            <div>系统：macOS 11.0+ (Intel/M1/M2)</div>
+            <div>大小：约 52 MB</div>
+            <div>格式：.dmg 安装镜像</div>
+          </div>
+          <a class="download-btn" href="https://github.com/Clashforwinodws/Clash-for-Winodows/releases/tag/v0.20.40/ClashXPro-0.20.40.dmg" target="_blank" rel="noopener">下载 .dmg</a>
+          <div class="alt-links">
+            <a href="#">Homebrew 安装</a> · <a href="tutorial.html">安装帮助</a>
+          </div>
+        </div>
+        <!-- Linux -->
+        <div class="dl-card">
+          <div class="dl-icon">🐧</div>
+          <div class="dl-name">Clash for Linux</div>
+          <div class="dl-version">v0.20.40 · 预编译包</div>
+          <div class="dl-meta">
+            <div>系统：主流发行版 (x64)</div>
+            <div>大小：约 42 MB</div>
+            <div>格式：.tar.gz (含 AppImage)</div>
+          </div>
+          <a class="download-btn" href="https://github.com/Clashforwinodws/Clash-for-Winodows/releases/tag/v0.20.40/Clash.for.Windows-0.20.40-x64-linux.tar.gz" target="_blank" rel="noopener">下载 .tar.gz</a>
+          <div class="alt-links">
+            <a href="#">AUR 包</a> · <a href="tutorial.html">命令行教程</a>
+          </div>
+        </div>
+        <!-- Android -->
+        <div class="dl-card">
+          <div class="dl-icon">🤖</div>
+          <div class="dl-name">Clash for Android</div>
+          <div class="dl-version">v0.20.40 · Premium APK</div>
+          <div class="dl-meta">
+            <div>系统：Android 7.0+</div>
+            <div>大小：约 38 MB</div>
+            <div>格式：.apk 直装包</div>
+          </div>
+          <a class="download-btn" href="https://github.com/Clashforwinodws/Clash-for-Winodows/releases/tag/v0.20.40/Clash.for.Android_0.20.40-premium-universal-release.apk" target="_blank" rel="noopener">下载 APK</a>
+          <div class="alt-links">
+            <a href="#">Google Play</a> · <a href="faq.html">安装权限</a>
+          </div>
+        </div>
+        <!-- iOS -->
+        <div class="dl-card">
+          <div class="dl-icon">📱</div>
+          <div class="dl-name">ClashX for iOS</div>
+          <div class="dl-version">App Store 官方版</div>
+          <div class="dl-meta">
+            <div>系统：iOS 14.0+</div>
+            <div>大小：约 45 MB</div>
+            <div>格式：通过 App Store 安装</div>
+          </div>
+          <a class="download-btn" href="https://apps.apple.com/app/clashx/id1481302438" target="_blank" rel="noopener">前往 App Store</a>
+          <div class="alt-links">
+            <a href="tutorial.html">iOS 配置指南</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 快速安装步骤 -->
+    <section class="card">
+      <h2><span>📋</span> 三步完成安装与配置</h2>
+      <div class="steps">
+        <div class="step">
+          <strong>① 下载对应平台客户端</strong>
+          <p style="margin-top:0.4rem;">根据您的设备选择上方安装包，建议校验 SHA256 确保文件完整。</p>
+        </div>
+        <div class="step">
+          <strong>② 安装并导入订阅</strong>
+          <p style="margin-top:0.4rem;">运行安装程序，打开客户端后粘贴 Clash 订阅链接或导入本地配置文件。</p>
+        </div>
+        <div class="step">
+          <strong>③ 开启系统代理</strong>
+          <p style="margin-top:0.4rem;">点击“系统代理”或“TUN 模式”，浏览器及应用流量将按规则自动分流。</p>
+        </div>
+      </div>
+      <p style="margin-top:1rem;">详细图文教程请查看 <a href="tutorial.html">配置教程页面 →</a></p>
+    </section>
+
+    <!-- 文件校验与安全说明 -->
+    <section class="card">
+      <h2><span>🔐</span> 文件校验与安全</h2>
+      <p>所有安装包均托管于 GitHub 官方 Release，您可以通过以下 SHA256 校验码验证下载文件是否被篡改：</p>
+      <div class="checksum-box">
+        Windows : 2f7c8e9a1b3d... (示例) <br>
+        macOS   : a4e6f2c1d8b9... (示例) <br>
+        Linux   : 7d3a5f1c2e6b... (示例) <br>
+        Android : 9c2f4e8a1d7b... (示例)
+      </div>
+      <p style="margin-top:0.8rem;">建议从本站提供的链接直接下载，避免第三方修改版本。如遇系统安全提示，请参照 <a href="faq.html">常见问题</a> 中的信任设置说明。</p>
+    </section>
+
+    <!-- 历史版本与衍生客户端 -->
+    <section class="card">
+      <h2><span>📦</span> 历史版本与衍生客户端</h2>
+      <p>如果您需要特定旧版本或想尝试其他 Clash 分支，可访问以下资源：</p>
+      <ul style="margin:1rem 0 1rem 1.5rem; color:#334155;">
+        <li>🔹 <a href="https://github.com/Clashforwinodws/Clash-for-Winodows/releases" target="_blank">GitHub Releases 完整列表</a>（包含所有历史版本）</li>
+        <li>🔹 <a href="#">Clash Verge Rev</a> – 更现代的桌面端，支持 TUN 与服务模式（推荐）</li>
+        <li>🔹 <a href="#">Clash Meta (Mihomo)</a> – 内核增强版，支持更多协议与规则</li>
+        <li>🔹 <a href="#">Clash Nyanpasu</a> – 轻量级 Windows 客户端</li>
+      </ul>
+      <p>无论使用哪种分支，配置文件语法基本通用，您可以无缝切换。</p>
+    </section>
+
+    <!-- 下载常见问题 -->
+    <section class="card">
+      <h2><span>❔</span> 下载与安装常见问题</h2>
+      <div style="margin-bottom:1rem;">
+        <strong>Q: 下载速度很慢怎么办？</strong>
+        <p>您可以使用镜像站或通过 GitHub 加速服务，也可在 <a href="#">备用下载页面</a> 获取国内 CDN 链接（如有）。</p>
+      </div>
+      <div style="margin-bottom:1rem;">
+        <strong>Q: macOS 提示“无法验证开发者”</strong>
+        <p>请前往 <em>系统偏好设置 → 安全性与隐私</em> 中允许运行，或参考 <a href="tutorial.html">安装说明</a>。</p>
+      </div>
+      <div style="margin-bottom:1rem;">
+        <strong>Q: Android APK 安装后闪退？</strong>
+        <p>请检查是否授予了存储和网络权限，部分国产 ROM 需关闭“纯净模式”。更多修复方法见 <a href="faq.html">FAQ</a>。</p>
+      </div>
+    </section>
+  </div>
+
+  <footer>
+    <p>© 2026 Clash 下载站 · 基于开源项目 Clash 构建 · <a href="https://clashforwinodws.github.io/Clash-for-Winodows/">clashforwinodws.github.io</a></p>
+    <p style="margin-top:0.4rem;">本站仅提供客户端下载与使用教程，不提供任何代理服务。</p>
+  </footer>
+
+  <!-- Google 结构化数据：SoftwareApplication 列表 -->
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "ItemList",
+      "name": "Clash 全平台客户端下载",
+      "itemListElement": [
+        {
+          "@type": "SoftwareApplication",
+          "name": "Clash for Windows",
+          "operatingSystem": "Windows",
+          "applicationCategory": "UtilitiesApplication",
+          "downloadUrl": "https://github.com/Clashforwinodws/Clash-for-Winodows/releases/tag/v0.20.40/Clash.for.Windows.Setup.0.20.40.exe",
+          "softwareVersion": "0.20.40",
+          "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
+        },
+        {
+          "@type": "SoftwareApplication",
+          "name": "ClashX Pro",
+          "operatingSystem": "macOS",
+          "applicationCategory": "UtilitiesApplication",
+          "downloadUrl": "https://github.com/Clashforwinodws/Clash-for-Winodows/releases/tag/v0.20.40/ClashXPro-0.20.40.dmg",
+          "softwareVersion": "0.20.40",
+          "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
+        },
+        {
+          "@type": "SoftwareApplication",
+          "name": "Clash for Linux",
+          "operatingSystem": "Linux",
+          "applicationCategory": "UtilitiesApplication",
+          "downloadUrl": "https://github.com/Clashforwinodws/Clash-for-Winodows/releases/tag/v0.20.40/Clash.for.Windows-0.20.40-x64-linux.tar.gz",
+          "softwareVersion": "0.20.40",
+          "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
+        },
+        {
+          "@type": "SoftwareApplication",
+          "name": "Clash for Android",
+          "operatingSystem": "Android",
+          "applicationCategory": "UtilitiesApplication",
+          "downloadUrl": "https://github.com/Clashforwinodws/Clash-for-Winodows/releases/tag/v0.20.40/Clash.for.Android_0.20.40-premium-universal-release.apk",
+          "softwareVersion": "0.20.40",
+          "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
+        },
+        {
+          "@type": "SoftwareApplication",
+          "name": "ClashX for iOS",
+          "operatingSystem": "iOS",
+          "applicationCategory": "UtilitiesApplication",
+          "downloadUrl": "https://apps.apple.com/app/clashx/id1481302438",
+          "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
+        }
+      ]
+    }
+  </script>
+</body>
+</html>
