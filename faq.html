@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>Clash 常见问题解答 · 安装配置与故障排除 | FAQ 帮助中心</title>
+  
+  <!-- SEO：FAQ独立页面，侧重问题解答、故障排除 -->
+  <meta name="description" content="Clash 客户端常见问题解答页面，涵盖 Windows、macOS、Linux、Android、iOS 各平台安装错误、订阅更新失败、代理连接不上、配置文件错误等详细解决方案，助您快速排查问题。">
+  <meta name="keywords" content="Clash 常见问题, Clash 故障排除, Clash 无法连接, Clash 配置错误, Clash 订阅更新失败, Clash 代理设置 FAQ, Clash 安装问题">
+  <meta name="author" content="Clashforwindows">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <style>
+    :root {
+      --primary: #1e6f9f;
+      --primary-dark: #145a7a;
+      --bg: #ffffff;
+      --surface: #f8fafc;
+      --border: #e2e8f0;
+      --text: #1e293b;
+      --text-secondary: #475569;
+      --accent: #f59e0b;
+      --radius: 12px;
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: var(--bg); color: var(--text); line-height:1.6;
+      display:flex; flex-direction:column; min-height:100vh;
+    }
+    .navbar {
+      background: rgba(255,255,255,0.9); border-bottom:1px solid var(--border);
+      padding:0.8rem 1.5rem; display:flex; flex-wrap:wrap; align-items:center;
+      justify-content:space-between; gap:1rem; position:sticky; top:0; z-index:50;
+      backdrop-filter: blur(12px);
+    }
+    .nav-logo {
+      font-weight:700; font-size:1.3rem; color:var(--primary-dark);
+      text-decoration:none; display:flex; align-items:center; gap:0.3rem;
+    }
+    .nav-links { display:flex; flex-wrap:wrap; gap:1.8rem; list-style:none; }
+    .nav-links a {
+      text-decoration:none; color:var(--text-secondary); font-weight:500;
+      font-size:0.95rem; transition:color 0.2s; white-space:nowrap;
+    }
+    .nav-links a:hover { color:var(--primary); }
+    .nav-links a.active {
+      color:var(--primary); font-weight:600; border-bottom:2px solid var(--primary);
+    }
+    .container {
+      max-width:1100px; margin:0 auto; padding:1.5rem 1.5rem 3rem; width:100%; flex:1;
+    }
+    .hero {
+      text-align:center; margin:2rem 0 2.5rem;
+    }
+    .hero h1 {
+      font-size:2.8rem; font-weight:800;
+      background: linear-gradient(135deg, #0f2b4b, #1e6f9f);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text; margin-bottom:0.75rem;
+    }
+    .hero p { font-size:1.2rem; color:var(--text-secondary); max-width:700px; margin:0 auto; }
+    .card {
+      background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+      padding:2rem 1.8rem; margin-bottom:2.2rem;
+      box-shadow:0 4px 12px rgba(0,0,0,0.02); transition:transform 0.2s, box-shadow 0.2s;
+    }
+    .card:hover { box-shadow:0 12px 28px rgba(0,0,0,0.05); transform:translateY(-2px); }
+    h2 {
+      font-size:1.8rem; margin-bottom:1.5rem; color:var(--primary-dark);
+      display:flex; align-items:center; gap:0.6rem;
+    }
+    h3 {
+      font-size:1.3rem; margin-bottom:1rem; color:#334155;
+    }
+    .faq-grid {
+      display:grid; grid-template-columns: repeat(auto-fit, minmax(280px,1fr));
+      gap:1.5rem; margin:1.5rem 0 0.5rem;
+    }
+    .faq-category {
+      background:white; border:1px solid var(--border); border-radius:var(--radius);
+      padding:1.5rem;
+    }
+    .faq-category h3 {
+      margin-top:0;
+      display:flex; align-items:center; gap:0.5rem;
+    }
+    details {
+      border-bottom:1px solid var(--border); padding:1rem 0;
+    }
+    details:last-child { border-bottom:none; }
+    summary {
+      font-weight:600; font-size:1.05rem; color:var(--text);
+      cursor:pointer; display:flex; justify-content:space-between;
+      align-items:center; list-style:none;
+    }
+    summary::-webkit-details-marker { display:none; }
+    summary::after {
+      content:'＋'; font-size:1.2rem; color:var(--primary); transition:transform 0.3s;
+    }
+    details[open] summary::after {
+      content:'－'; transform:rotate(180deg);
+    }
+    .answer {
+      margin-top:0.8rem; color:var(--text-secondary); line-height:1.7;
+      padding-left:1rem; border-left:3px solid var(--primary);
+    }
+    .quick-links {
+      display:flex; flex-wrap:wrap; gap:1rem; margin:1.5rem 0;
+    }
+    .quick-link {
+      background:white; border:1px solid var(--border); border-radius:2rem;
+      padding:0.5rem 1.2rem; text-decoration:none; color:var(--primary-dark);
+      font-weight:500; transition:0.2s;
+    }
+    .quick-link:hover { background:var(--primary); color:white; border-color:var(--primary); }
+    .highlight-box {
+      background: #e6f0f8; border-left:4px solid var(--primary);
+      padding:1.2rem 1.5rem; border-radius:var(--radius); margin:1.5rem 0;
+    }
+    footer {
+      background:var(--surface); border-top:1px solid var(--border);
+      text-align:center; padding:1.8rem; color:var(--text-secondary); font-size:0.9rem;
+      margin-top:auto;
+    }
+    footer a { color:var(--primary); text-decoration:none; }
+    @media (max-width:700px) {
+      .nav-links { gap:1rem; }
+    }
+  </style>
+</head>
+<body>
+  <nav class="navbar">
+    <a href="/Clash-for-Winodows/" class="nav-logo">⚡ Clash Hub</a>
+    <ul class="nav-links">
+      <li><a href="/Clash-for-Winodows/">首页</a></li>
+      <li><a href="download.html">📥 下载中心</a></li>
+      <li><a href="tutorial.html">📘 配置教程</a></li>
+      <li><a href="faq.html" class="active">❓ 常见问题</a></li>
+      <li><a href="changelog.html">📋 更新日志</a></li>
+      <li><a href="about.html">💡 关于项目</a></li>
+    </ul>
+  </nav>
+
+  <div class="container">
+    <header class="hero">
+      <h1>Clash 常见问题解答</h1>
+      <p>涵盖安装、配置、代理连接、订阅更新及平台特定问题，助您快速排查故障，顺畅使用 Clash 客户端。</p>
+    </header>
+
+    <!-- 快速跳转链接 -->
+    <div class="quick-links">
+      <a href="#install" class="quick-link">📦 安装与启动</a>
+      <a href="#config" class="quick-link">⚙️ 配置与订阅</a>
+      <a href="#connect" class="quick-link">🌐 代理连接</a>
+      <a href="#platform" class="quick-link">🖥️ 平台特定</a>
+      <a href="#other" class="quick-link">🔍 其他问题</a>
+    </div>
+
+    <!-- 分类FAQ卡片网格 -->
+    <div class="faq-grid">
+      <!-- 安装与启动 -->
+      <div class="faq-category" id="install">
+        <h3>📦 安装与启动</h3>
+        <details>
+          <summary>Windows 安装后无法启动，提示缺少 .NET 运行时？</summary>
+          <div class="answer">
+            <p>部分 Clash 客户端需要 .NET 环境。请前往 <a href="https://dotnet.microsoft.com/en-us/download" target="_blank">微软官网</a> 下载并安装 .NET 桌面运行时，然后重启客户端。如果仍无法启动，尝试使用便携版或 Clash Verge Rev 版本。</p>
+          </div>
+        </details>
+        <details>
+          <summary>macOS 提示“无法验证开发者”或“已损坏”？</summary>
+          <div class="answer">
+            <p>因为应用未经过 Apple 官方签名。请打开 <strong>系统偏好设置 → 安全性与隐私</strong>，在通用标签页允许从 App Store 和认可开发者运行的应用，或点击“仍要打开”。若已移动至废纸篓，需先在终端执行 <code>xattr -c /Applications/ClashX\ Pro.app</code> 移除隔离属性。</p>
+          </div>
+        </details>
+        <details>
+          <summary>Linux 下运行 Clash 提示权限不足？</summary>
+          <div class="answer">
+            <p>请使用 <code>chmod +x clash</code> 赋予可执行权限，并以 root 或 sudo 运行。如需绑定特权端口（如 80/443），需要授予 <code>CAP_NET_BIND_SERVICE</code> 能力。</p>
+          </div>
+        </details>
+        <details>
+          <summary>Android 安装 APK 时出现“解析包错误”？</summary>
+          <div class="answer">
+            <p>通常由于下载的 APK 不完整或与系统架构不兼容。请重新下载 universal 版本 APK，确保手机允许安装未知来源应用，并关闭“纯净模式”。</p>
+          </div>
+        </details>
+      </div>
+
+      <!-- 配置与订阅 -->
+      <div class="faq-category" id="config">
+        <h3>⚙️ 配置与订阅</h3>
+        <details>
+          <summary>导入订阅后节点列表为空怎么办？</summary>
+          <div class="answer">
+            <p>首先在浏览器中直接访问订阅链接，确认返回的是 Base64 编码的节点信息。如果链接被屏蔽，可尝试更换 User-Agent，或在客户端设置代理后更新订阅。部分客户端支持“订阅转换”功能，可将格式统一为 Clash 兼容配置。</p>
+          </div>
+        </details>
+        <details>
+          <summary>配置文件格式错误，客户端报错无法解析？</summary>
+          <div class="answer">
+            <p>YAML 对缩进十分敏感，请使用空格缩进（通常为 2 个空格），切勿混用 Tab。可将配置内容粘贴至 <a href="https://www.yamllint.com/" target="_blank">YAML 校验工具</a> 检查。常见错误：未对齐的列表项、缺少冒号后的空格、重复的节点名称。</p>
+          </div>
+        </details>
+        <details>
+          <summary>如何让订阅定期自动更新？</summary>
+          <div class="answer">
+            <p>大多数客户端支持设置更新间隔（如 24 小时），在配置页面启用“自动更新订阅”即可。若网络环境限制，可编写脚本配合 cron 定时拉取，或使用支持代理更新订阅的版本。</p>
+          </div>
+        </details>
+      </details>
+    </div>
+
+    <!-- 代理连接 -->
+    <div class="faq-category" id="connect">
+      <h3>🌐 代理连接</h3>
+      <details>
+        <summary>开启系统代理后浏览器仍然无法访问外网？</summary>
+        <div class="answer">
+          <p>请依次检查：客户端是否正常运行并显示节点信息；系统代理设置是否被正确修改（Windows 设置 → 网络和 Internet → 代理）；浏览器是否安装了代理扩展冲突；防火墙/杀毒软件是否拦截了 Clash 进程。</p>
+        </div>
+      </details>
+      <details>
+        <summary>部分网站能打开，部分打不开（规则问题）？</summary>
+        <div class="answer">
+          <p>这通常是规则配置不完整。请确保配置文件中包含常用域名规则，或使用社区规则集。可在客户端临时切换到“全局模式”测试是否所有网站都可访问，以确认是规则问题。</p>
+        </div>
+      </details>
+      <details>
+        <summary>连接节点后延迟很高或断流？</summary>
+        <div class="answer">
+          <p>尝试更换节点，或使用 <code>url-test</code> 策略组自动选择低延迟节点。如果使用机场服务，可联系提供商检查节点状态。本地网络波动也可能导致，可尝试重启路由器或更换连接方式。</p>
+        </div>
+      </details>
+    </div>
+
+    <!-- 平台特定 -->
+    <div class="faq-category" id="platform">
+      <h3>🖥️ 平台特定问题</h3>
+      <details>
+        <summary>Windows TUN 模式安装后无法上网？</summary>
+        <div class="answer">
+          <p>TUN 模式会创建虚拟网卡，需要管理员权限。请在设置中开启“服务模式”并以管理员身份运行客户端。如果仍失败，可尝试卸载虚拟网卡驱动后重启客户端。</p>
+        </div>
+      </details>
+      <details>
+        <summary>macOS 菜单栏图标不显示？</summary>
+        <div class="answer">
+          <p>可能是系统隐藏了菜单栏项目。前往“系统设置 → 控制中心”调整菜单栏显示项目，或尝试重启 ClashX。若仍无法显示，重新安装客户端通常可解决。</p>
+        </div>
+      </details>
+      <details>
+        <summary>Linux 下如何设置开机自启？</summary>
+        <div class="answer">
+          <p>可以使用 systemd 服务。创建 <code>/etc/systemd/system/clash.service</code>，指定执行路径和配置文件目录，然后执行 <code>systemctl enable clash --now</code>。具体模板可参考 <a href="tutorial.html">配置教程</a>。</p>
+        </div>
+      </details>
+      <details>
+        <summary>iOS 上 ClashX 无法更新订阅？</summary>
+        <div class="answer">
+          <p>请检查是否已允许 ClashX 使用网络权限，并尝试在 Wi-Fi 和蜂窝网络下分别测试。部分订阅链接可能需要代理才能访问，可尝试先导入配置文件后，再通过代理更新。</p>
+        </div>
+      </details>
+    </div>
+
+    <!-- 其他 -->
+    <div class="faq-category" id="other">
+      <h3>🔍 其他常见疑问</h3>
+      <details>
+        <summary>Clash 是否安全？会被检测到吗？</summary>
+        <div class="answer">
+          <p>Clash 本身是开源规则引擎，安全与否取决于您使用的代理协议和节点。常用协议如 Shadowsocks、VMess 等设计有混淆和加密，正常使用下风险较低。但请遵守当地法律法规，本工具仅用于学习交流。</p>
+        </div>
+      </details>
+      <details>
+        <summary>多个配置文件如何切换？</summary>
+        <div class="answer">
+          <p>客户端通常支持导入多个配置，可在配置列表中点击切换。不同配置之间的节点和规则独立，适合不同的网络环境（如家里、公司、出差）。</p>
+        </div>
+      </details>
+      <details>
+        <summary>如何彻底卸载 Clash？</summary>
+        <div class="answer">
+          <p>Windows：通过控制面板卸载，并删除用户目录下的 <code>.clash</code> 或客户端数据文件夹。macOS：将应用拖入废纸篓，并删除 <code>~/Library/Application Support/clash</code> 等目录。Linux：删除二进制文件和配置文件目录。Android/iOS：直接长按卸载即可。</p>
+        </div>
+      </details>
+    </div>
+  </div>
+
+  <!-- 提示与进一步帮助 -->
+  <div class="highlight-box">
+    <strong>💬 还有问题？</strong> 请先查阅 <a href="tutorial.html">配置教程</a> 或 <a href="changelog.html">更新日志</a>，也可访问我们的 <a href="https://github.com/Clashforwinodws/Clash-for-Winodows/issues" target="_blank">GitHub Issues</a> 提交反馈。本站持续更新更多实用解答。
+  </div>
+
+  <!-- 相关资源链接 -->
+  <section class="card">
+    <h2><span>📚</span> 相关资源与支持</h2>
+    <ul style="margin-left:1.5rem; color:#334155;">
+      <li>🔧 <a href="tutorial.html">配置教程</a> – 从零开始学习 YAML 编辑与规则设置</li>
+      <li>⬇️ <a href="download.html">下载中心</a> – 获取最新版客户端安装包</li>
+      <li>📋 <a href="changelog.html">更新日志</a> – 查看版本更新详情与已修复问题</li>
+      <li>🌐 <a href="https://github.com/Clashforwinodws/Clash-for-Winodows" target="_blank">Clash 核心源码</a></li>
+    </ul>
+  </section>
+</div>
+
+<footer>
+  <p>© 2026 Clash 下载站 · 基于开源项目 Clash 构建 · <a href="https://clashforwinodws.github.io/Clash-for-Winodows/">clashforwinodws.github.io</a></p>
+  <p style="margin-top:0.4rem;">本站仅提供客户端下载与使用教程，不提供任何代理服务。</p>
+</footer>
+
+<!-- ========== Google 结构化数据：FAQPage ========== -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "Windows 安装后无法启动，提示缺少 .NET 运行时？",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "部分 Clash 客户端需要 .NET 环境。请前往微软官网下载并安装 .NET 桌面运行时，然后重启客户端。如果仍无法启动，尝试使用便携版或 Clash Verge Rev 版本。"
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "macOS 提示“无法验证开发者”或“已损坏”？",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "请打开系统偏好设置 → 安全性与隐私，在通用标签页允许从 App Store 和认可开发者运行的应用，或点击“仍要打开”。若已移至废纸篓，需在终端执行 xattr -c 命令移除隔离属性。"
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "导入订阅后节点列表为空怎么办？",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "首先在浏览器中直接访问订阅链接，确认返回的是 Base64 编码的节点信息。如果链接被屏蔽，可尝试更换 User-Agent，或在客户端设置代理后更新订阅。部分客户端支持订阅转换功能。"
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "开启系统代理后浏览器仍然无法访问外网？",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "请依次检查：客户端是否正常运行并显示节点；系统代理设置是否被正确修改；浏览器是否安装了代理扩展冲突；防火墙/杀毒软件是否拦截了 Clash 进程。"
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "配置文件格式错误，客户端报错无法解析？",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "YAML 对缩进十分敏感，请使用空格缩进（通常为2个空格），切勿混用 Tab。可将配置内容粘贴至 YAML 校验工具检查。常见错误：未对齐的列表项、缺少冒号后的空格、重复的节点名称。"
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Windows TUN 模式安装后无法上网？",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "TUN 模式会创建虚拟网卡，需要管理员权限。请在设置中开启服务模式并以管理员身份运行客户端。如果仍失败，可尝试卸载虚拟网卡驱动后重启客户端。"
+      }
+    }
+  ]
+}
+</script>
+</body>
+</html>
