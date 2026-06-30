@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>Clash 配置教程 · 从订阅导入到高级规则编写 | Windows macOS 设置指南</title>
+  
+  <!-- SEO：配置教程独立页面，侧重步骤、YAML、规则 -->
+  <meta name="description" content="详细的 Clash 配置教程，手把手教你导入订阅链接、编辑 YAML 配置文件、设置分流规则、启用 TUN 模式以及解决常见错误。适用于 Clash Verge Rev、ClashX、Clash for Android 等全平台客户端。">
+  <meta name="keywords" content="Clash 配置教程, Clash YAML 配置, Clash 订阅导入, Clash 规则编写, Clash 分流设置, Clash 代理配置, Clash Windows 设置, Clash macOS 配置, Clash 配置文件示例">
+  <meta name="author" content="Clashforwindows">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <style>
+    :root {
+      --primary: #1e6f9f;
+      --primary-dark: #145a7a;
+      --bg: #ffffff;
+      --surface: #f8fafc;
+      --border: #e2e8f0;
+      --text: #1e293b;
+      --text-secondary: #475569;
+      --accent: #f59e0b;
+      --radius: 12px;
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: var(--bg); color: var(--text); line-height:1.6;
+      display:flex; flex-direction:column; min-height:100vh;
+    }
+    .navbar {
+      background: rgba(255,255,255,0.9); border-bottom:1px solid var(--border);
+      padding:0.8rem 1.5rem; display:flex; flex-wrap:wrap; align-items:center;
+      justify-content:space-between; gap:1rem; position:sticky; top:0; z-index:50;
+      backdrop-filter: blur(12px);
+    }
+    .nav-logo {
+      font-weight:700; font-size:1.3rem; color:var(--primary-dark);
+      text-decoration:none; display:flex; align-items:center; gap:0.3rem;
+    }
+    .nav-links { display:flex; flex-wrap:wrap; gap:1.8rem; list-style:none; }
+    .nav-links a {
+      text-decoration:none; color:var(--text-secondary); font-weight:500;
+      font-size:0.95rem; transition:color 0.2s; white-space:nowrap;
+    }
+    .nav-links a:hover { color:var(--primary); }
+    .nav-links a.active {
+      color:var(--primary); font-weight:600; border-bottom:2px solid var(--primary);
+    }
+    .container {
+      max-width:1100px; margin:0 auto; padding:1.5rem 1.5rem 3rem; width:100%; flex:1;
+    }
+    .hero {
+      text-align:center; margin:2rem 0 2.5rem;
+    }
+    .hero h1 {
+      font-size:2.8rem; font-weight:800;
+      background: linear-gradient(135deg, #0f2b4b, #1e6f9f);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text; margin-bottom:0.75rem;
+    }
+    .hero p { font-size:1.2rem; color:var(--text-secondary); max-width:750px; margin:0 auto; }
+    .card {
+      background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+      padding:2rem 1.8rem; margin-bottom:2.2rem;
+      box-shadow:0 4px 12px rgba(0,0,0,0.02); transition:transform 0.2s, box-shadow 0.2s;
+    }
+    .card:hover { box-shadow:0 12px 28px rgba(0,0,0,0.05); transform:translateY(-2px); }
+    h2 {
+      font-size:1.8rem; margin-bottom:1.2rem; color:var(--primary-dark);
+      display:flex; align-items:center; gap:0.6rem;
+    }
+    h3 { font-size:1.3rem; margin:1.2rem 0 0.5rem; color:#334155; }
+    h4 { font-size:1.1rem; margin:1rem 0 0.4rem; color:#475569; }
+    .code-block {
+      background:#1e293b; color:#e2e8f0; padding:1.2rem; border-radius:var(--radius);
+      font-family: 'JetBrains Mono', 'Fira Code', monospace; font-size:0.9rem;
+      overflow-x: auto; margin:1rem 0; line-height:1.7;
+    }
+    .note {
+      background:#fff7ed; border-left:4px solid var(--accent); padding:1rem 1.5rem;
+      border-radius:var(--radius); margin:1.2rem 0; font-size:0.95rem;
+    }
+    .steps-grid {
+      display:grid; grid-template-columns: repeat(auto-fit, minmax(220px,1fr));
+      gap:1.5rem; margin:1.5rem 0;
+    }
+    .step-card {
+      background:white; border:1px solid var(--border); border-radius:var(--radius);
+      padding:1.5rem; position:relative;
+    }
+    .step-number {
+      background:var(--primary); color:white; width:32px; height:32px;
+      border-radius:50%; display:flex; align-items:center; justify-content:center;
+      font-weight:700; margin-bottom:0.8rem;
+    }
+    .table-of-contents {
+      background:white; border:1px solid var(--border); border-radius:var(--radius);
+      padding:1.5rem; margin-bottom:2rem;
+    }
+    .table-of-contents ul { list-style:none; display:flex; flex-wrap:wrap; gap:0.8rem 2rem; }
+    .table-of-contents a { color:var(--primary); text-decoration:none; font-weight:500; }
+    footer {
+      background:var(--surface); border-top:1px solid var(--border);
+      text-align:center; padding:1.8rem; color:var(--text-secondary); font-size:0.9rem;
+      margin-top:auto;
+    }
+    footer a { color:var(--primary); text-decoration:none; }
+    @media (max-width:700px) {
+      .nav-links { gap:1rem; }
+    }
+  </style>
+</head>
+<body>
+  <nav class="navbar">
+    <a href="/Clash-for-Winodows/" class="nav-logo">⚡ Clash Hub</a>
+    <ul class="nav-links">
+      <li><a href="/Clash-for-Winodows/">首页</a></li>
+      <li><a href="download.html">📥 下载中心</a></li>
+      <li><a href="tutorial.html" class="active">📘 配置教程</a></li>
+      <li><a href="faq.html">❓ 常见问题</a></li>
+      <li><a href="changelog.html">📋 更新日志</a></li>
+      <li><a href="about.html">💡 关于项目</a></li>
+    </ul>
+  </nav>
+
+  <div class="container">
+    <header class="hero">
+      <h1>Clash 完整配置指南</h1>
+      <p>从零开始，掌握订阅导入、YAML 配置文件编辑、分流规则编写以及各平台高级设置，充分发挥 Clash 规则引擎的潜力。</p>
+    </header>
+
+    <!-- 目录快速导航 -->
+    <div class="table-of-contents">
+      <strong style="font-size:1.1rem;">📑 本页目录</strong>
+      <ul style="margin-top:0.6rem;">
+        <li><a href="#quickstart">⚡ 快速入门</a></li>
+        <li><a href="#yaml">🧾 YAML 配置文件详解</a></li>
+        <li><a href="#rules">🎯 代理与规则系统</a></li>
+        <li><a href="#platforms">🖥️ 各平台进阶设置</a></li>
+        <li><a href="#debug">🔧 常见错误与调试</a></li>
+        <li><a href="#templates">📄 配置模板与最佳实践</a></li>
+      </ul>
+    </div>
+
+    <!-- 快速入门 -->
+    <section class="card" id="quickstart">
+      <h2><span>⚡</span> 快速入门：三步开启代理</h2>
+      <div class="steps-grid">
+        <div class="step-card">
+          <div class="step-number">1</div>
+          <h3>下载并安装客户端</h3>
+          <p>根据您的操作系统，从<a href="download.html">下载中心</a>获取最新版 Clash 客户端并完成安装。Windows 用户推荐安装版，macOS 用户直接拖入应用程序文件夹。</p>
+        </div>
+        <div class="step-card">
+          <div class="step-number">2</div>
+          <h3>导入订阅链接</h3>
+          <p>打开客户端，找到“配置”或“Profiles”页面，粘贴从服务商获取的 Clash 订阅 URL，点击下载。客户端会自动解析节点和规则。</p>
+        </div>
+        <div class="step-card">
+          <div class="step-number">3</div>
+          <h3>开启系统代理</h3>
+          <p>在客户端主界面点击“系统代理”或“TUN 模式”开关。浏览器与应用的网络流量将根据配置文件规则自动分流。</p>
+        </div>
+      </div>
+      <div class="note">
+        💡 <strong>提示：</strong> 如果导入订阅后无节点显示，请检查订阅链接是否有效，或尝试在浏览器中直接打开该链接验证。
+      </div>
+    </section>
+
+    <!-- YAML 配置文件详解 -->
+    <section class="card" id="yaml">
+      <h2><span>🧾</span> YAML 配置文件结构详解</h2>
+      <p>Clash 使用 YAML 格式的配置文件来定义代理、规则、策略组等。下面是一个简化的配置模板，包含了最常用的字段：</p>
+      <div class="code-block">
+        <pre># Clash 配置文件示例
+port: 7890
+socks-port: 7891
+allow-lan: false
+mode: rule
+log-level: info
+
+# 代理节点列表
+proxies:
+  - name: "我的节点"
+    type: ss
+    server: server.example.com
+    port: 8388
+    cipher: aes-256-gcm
+    password: "your_password"
+
+# 策略组
+proxy-groups:
+  - name: PROXY
+    type: select
+    proxies:
+      - "我的节点"
+      - DIRECT
+
+# 分流规则
+rules:
+  - DOMAIN-SUFFIX,google.com,PROXY
+  - DOMAIN-KEYWORD,youtube,PROXY
+  - GEOIP,CN,DIRECT
+  - MATCH,PROXY</pre>
+      </div>
+      <h3>核心字段说明</h3>
+      <ul style="margin-left:1.5rem; color:#334155;">
+        <li><strong>port / socks-port</strong>：HTTP 和 SOCKS5 代理监听端口，一般无需修改。</li>
+        <li><strong>allow-lan</strong>：是否允许局域网设备连接本机代理，默认关闭以保证安全。</li>
+        <li><strong>mode</strong>：运行模式，通常使用 <code>rule</code>（规则模式），其他还有 <code>global</code>（全局）和 <code>direct</code>（直连）。</li>
+        <li><strong>log-level</strong>：日志级别，调试时可设为 <code>debug</code>。</li>
+        <li><strong>proxies</strong>：定义所有代理节点，支持 Shadowsocks、VMess、Trojan 等协议。</li>
+        <li><strong>proxy-groups</strong>：策略组，用于将多个节点组合，提供手动选择、自动测试、负载均衡等功能。</li>
+        <li><strong>rules</strong>：规则列表，从上到下匹配，决定流量走哪个代理或直连。</li>
+      </ul>
+    </section>
+
+    <!-- 代理与规则系统 -->
+    <section class="card" id="rules">
+      <h2><span>🎯</span> 代理与规则系统深入</h2>
+      <h3>策略组类型</h3>
+      <p>策略组决定流量如何从一组代理中选择出口，常见类型包括：</p>
+      <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px,1fr)); gap:1rem; margin:1.2rem 0;">
+        <div style="background:white; border:1px solid var(--border); border-radius:8px; padding:1rem;">
+          <strong>select</strong> – 手动选择一个节点，适合需要固定出口的场景。
+        </div>
+        <div style="background:white; border:1px solid var(--border); border-radius:8px; padding:1rem;">
+          <strong>url-test</strong> – 自动选择延迟最低的节点，每间隔一段时间测试。
+        </div>
+        <div style="background:white; border:1px solid var(--border); border-radius:8px; padding:1rem;">
+          <strong>fallback</strong> – 按顺序尝试，当第一个不可用时自动切换下一个。
+        </div>
+        <div style="background:white; border:1px solid var(--border); border-radius:8px; padding:1rem;">
+          <strong>load-balance</strong> – 在多个节点间负载均衡，分散流量。
+        </div>
+      </div>
+
+      <h3>规则匹配逻辑</h3>
+      <p>规则从上至下依次匹配，命中即停止。常用规则类型：</p>
+      <ul style="margin-left:1.5rem; columns:2; color:#334155;">
+        <li>DOMAIN-SUFFIX,google.com,PROXY</li>
+        <li>DOMAIN-KEYWORD,facebook,PROXY</li>
+        <li>GEOIP,CN,DIRECT</li>
+        <li>IP-CIDR,10.0.0.0/8,DIRECT</li>
+        <li>MATCH,PROXY</li>
+      </ul>
+      <p style="margin-top:0.8rem;">规则中最后一条通常为 <code>MATCH</code>，表示所有未匹配的流量默认走指定策略组。默认走 PROXY 可实现“大陆白名单”模式，而默认走 DIRECT 则需要准确编写代理规则。</p>
+      <div class="note">
+        🧠 <strong>推荐做法：</strong> 使用社区维护的规则集（如 <code>https://github.com/Loyalsoldier/clash-rules</code>）替换手动规则，以自动更新域名列表。
+      </div>
+    </section>
+
+    <!-- 各平台进阶设置 -->
+    <section class="card" id="platforms">
+      <h2><span>🖥️</span> 各平台进阶设置</h2>
+      <h3>Windows · TUN 模式与服务安装</h3>
+      <p>部分客户端（如 Clash Verge Rev）支持 TUN 模式，可代理所有系统流量（包括不支持系统代理的应用）。启用 TUN 模式需要安装虚拟网卡驱动，通常客户端会引导完成。若需开机自启，可开启“服务模式”，以管理员权限运行。</p>
+      <h3>macOS · 增强模式与菜单栏快捷操作</h3>
+      <p>ClashX Pro 提供“增强模式”，类似 TUN，通过虚拟网卡接管流量。可在菜单栏快速切换节点或策略组，并支持系统代理自动配置。</p>
+      <h3>Linux · 命令行与守护进程</h3>
+      <p>Linux 用户可直接运行 Clash 二进制文件，配合 systemd 服务实现后台运行。示例服务文件：</p>
+      <div class="code-block">
+        <pre>[Unit]
+Description=Clash daemon
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/clash -d /etc/clash
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target</pre>
+      </div>
+      <h3>Android / iOS · 分应用代理</h3>
+      <p>移动端客户端通常支持分应用代理（黑白名单），可指定哪些应用走代理。iOS 上的 ClashX 或 Stash 可通过“按需连接”功能自动管理 VPN 连接。</p>
+    </section>
+
+    <!-- 常见错误与调试 -->
+    <section class="card" id="debug">
+      <h2><span>🔧</span> 常见配置错误与调试方法</h2>
+      <div style="margin-bottom:1.2rem;">
+        <strong>❌ 配置文件格式错误</strong>
+        <p>YAML 对缩进敏感，请使用空格（勿用 Tab），确保层级正确。可粘贴到 <a href="https://www.yamllint.com/" target="_blank">YAML Lint</a> 在线校验。</p>
+      </div>
+      <div style="margin-bottom:1.2rem;">
+        <strong>❌ 节点无法连接或超时</strong>
+        <p>检查代理服务器地址、端口、密码是否正确；在客户端内使用“延迟测试”确认节点可达；检查防火墙是否放行端口。</p>
+      </div>
+      <div style="margin-bottom:1.2rem;">
+        <strong>❌ 规则不生效，流量全部直连或全部代理</strong>
+        <p>确认客户端运行模式为“Rule”；检查规则顺序，避免 <code>MATCH</code> 出现在规则中间；使用客户端日志查看匹配情况。</p>
+      </div>
+      <div style="margin-bottom:1.2rem;">
+        <strong>❌ 订阅更新失败</strong>
+        <p>部分网络环境可能屏蔽订阅地址，尝试更换 User-Agent 或使用代理本身更新订阅；也可手动下载配置文件后导入。</p>
+      </div>
+    </section>
+
+    <!-- 配置模板与最佳实践 -->
+    <section class="card" id="templates">
+      <h2><span>📄</span> 配置模板与最佳实践</h2>
+      <p>以下提供两个常用场景的配置模板，可根据需要修改。</p>
+      <h4>🅰️ 最小化配置（适合单节点用户）</h4>
+      <div class="code-block">
+        <pre>port: 7890
+socks-port: 7891
+proxies:
+  - name: "MyServer"
+    type: ss
+    server: 1.2.3.4
+    port: 8388
+    cipher: aes-256-gcm
+    password: "pwd"
+proxy-groups:
+  - name: PROXY
+    type: select
+    proxies:
+      - MyServer
+      - DIRECT
+rules:
+  - MATCH,PROXY</pre>
+      </div>
+      <h4>🅱️ 多节点自动选优 + 广告拦截规则</h4>
+      <div class="code-block">
+        <pre>proxy-groups:
+  - name: Auto
+    type: url-test
+    proxies:
+      - Node1
+      - Node2
+      - Node3
+    url: 'http://www.gstatic.com/generate_204'
+    interval: 300
+  - name: AdBlock
+    type: select
+    proxies:
+      - REJECT
+      - DIRECT
+rules:
+  - DOMAIN-KEYWORD,ad,REJECT
+  - DOMAIN-SUFFIX,doubleclick.net,REJECT
+  - GEOIP,CN,DIRECT
+  - MATCH,Auto</pre>
+      </div>
+      <p>建议将所有节点定义在单独的文件中，利用 Clash 的 <code>proxy-providers</code> 或订阅链接统一管理，避免手动维护。</p>
+    </section>
+
+    <!-- 相关资源 -->
+    <section class="card">
+      <h2><span>📚</span> 更多资源与延伸阅读</h2>
+      <ul style="margin-left:1.5rem; color:#334155;">
+        <li>📖 <a href="https://github.com/Clashforwinodws/Clash-for-Winodows/wiki" target="_blank">Clash 核心官方文档</a></li>
+        <li>🧩 <a href="https://github.com/Clashforwinodws/Clash-for-Winodows/wiki/Clash-Nyanpasu" target="_blank">Loyalsoldier 规则集</a> – 定期更新的域名与 IP 规则</li>
+        <li>🛠️ <a href="https://github.com/Clashforwinodws/Clash-for-Winodows/wiki/Clash-Meta-for-Android" target="_blank">Clash Meta 文档</a> – 增强内核特性说明</li>
+        <li>💬 <a href="faq.html">常见问题与故障排除</a></li>
+      </ul>
+    </section>
+  </div>
+
+  <footer>
+    <p>© 2026 Clash 下载站 · 基于开源项目 Clash 构建 · <a href="https://clashforwinodws.github.io/Clash-for-Winodows/">clashforwinodws.github.io</a></p>
+    <p style="margin-top:0.4rem;">本站仅提供客户端下载与使用教程，不提供任何代理服务。</p>
+  </footer>
+
+  <!-- 结构化数据：Article + HowTo -->
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "Article",
+          "headline": "Clash 客户端完整配置教程",
+          "author": {
+            "@type": "Organization",
+            "name": "Clashforwindows"
+          },
+          "datePublished": "2026-06-30",
+          "description": "从订阅导入到高级规则编写，详细的 Clash 客户端配置教程，适用于 Windows、macOS、Linux、Android 等平台。"
+        },
+        {
+          "@type": "HowTo",
+          "name": "快速配置 Clash 代理",
+          "step": [
+            {
+              "@type": "HowToStep",
+              "position": 1,
+              "name": "下载并安装客户端",
+              "text": "从下载中心获取最新版 Clash 客户端并完成安装。"
+            },
+            {
+              "@type": "HowToStep",
+              "position": 2,
+              "name": "导入订阅链接",
+              "text": "打开客户端，进入配置页面，粘贴 Clash 订阅 URL 并下载。"
+            },
+            {
+              "@type": "HowToStep",
+              "position": 3,
+              "name": "开启系统代理",
+              "text": "点击系统代理或 TUN 模式开关，浏览器流量将自动分流。"
+            }
+          ]
+        }
+      ]
+    }
+  </script>
+</body>
+</html>
