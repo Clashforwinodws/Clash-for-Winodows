@@ -42,4 +42,35 @@
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
+
+    <url>
+    <loc>https://clashforwinodws.github.io/Clash-for-Winodows/articles/</loc>
+    <lastmod>2026-07-07</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+      <url>
+    <loc>https://clashforwinodws.github.io/Clash-for-Winodows/articles/proxy-group-guide.html</loc>
+    <lastmod>2026-07-07</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+      <url>
+    <loc>https://clashforwinodws.github.io/Clash-for-Winodows/articles/custom-rules.html</loc>
+    <lastmod>2026-07-07</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+        <url>
+    <loc>https://clashforwinodws.github.io/Clash-for-Winodows/articles/subscription-troubleshoot.html</loc>
+    <lastmod>2026-07-07</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+        <url>
+    <loc>https://clashforwinodws.github.io/Clash-for-Winodows/articles/tun-optimization.html</loc>
+    <lastmod>2026-07-07</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
 </urlset>
