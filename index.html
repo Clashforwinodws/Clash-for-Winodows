@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <title>Clash 下载官网 | Windows/macOS/Linux/Android 最新版免费客户端</title>
-  
+
   <!-- 基础 SEO 设置：针对 Clash 各平台客户端下载，突出免费、开源、最新版 -->
   <meta name="description" content="Clash 开源社区官方下载站提供 Windows、macOS、Linux、Android 及 iOS 全平台最新版 Clash 客户端免费下载。支持 Clash Verge Rev、Clash Meta、ClashX 等多款衍生工具，附详尽配置教程、订阅使用说明与常见问题解答，安全高速的代理规则引擎。">
   <meta name="keywords" content="Clash 下载, Clash Windows 客户端, Clash Mac 下载, Clash Linux 安装, Clash Android APK, Clash Verge Rev, Clash Meta, 科学上网客户端, 代理工具, 订阅配置">
@@ -13,7 +13,8 @@
   <link rel="canonical" href="https://clashforwinodws.github.io/Clash-for-Winodows/">
   <!-- Google Search Console 验证标签，保持不变 -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<!-- ========== Google 结构化数据 (JSON‑LD) ========== -->
+
+  <!-- ========== Google 结构化数据 (JSON‑LD) ========== -->
   <script type="application/ld+json">
     {
       "@context": "https://schema.org",
@@ -71,11 +72,7 @@
               "operatingSystem": "Windows",
               "applicationCategory": "UtilitiesApplication",
               "downloadUrl": "https://github.com/Clashforwinodws/Clash-for-Winodows/releases/tag/v0.20.40/Clash.for.Windows.Setup.0.20.40.exe",
-              "offers": {
-                "@type": "Offer",
-                "price": "0",
-                "priceCurrency": "USD"
-              }
+              "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
             },
             {
               "@type": "SoftwareApplication",
@@ -83,11 +80,7 @@
               "operatingSystem": "macOS",
               "applicationCategory": "UtilitiesApplication",
               "downloadUrl": "https://github.com/Clashforwinodws/Clash-for-Winodows/releases/tag/v0.20.40/ClashXPro-0.20.40.dmg",
-              "offers": {
-                "@type": "Offer",
-                "price": "0",
-                "priceCurrency": "USD"
-              }
+              "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
             },
             {
               "@type": "SoftwareApplication",
@@ -95,11 +88,7 @@
               "operatingSystem": "Linux",
               "applicationCategory": "UtilitiesApplication",
               "downloadUrl": "https://github.com/Clashforwinodws/Clash-for-Winodows/releases/tag/v0.20.40/Clash.for.Windows-0.20.40-x64-linux.tar.gz",
-              "offers": {
-                "@type": "Offer",
-                "price": "0",
-                "priceCurrency": "USD"
-              }
+              "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
             },
             {
               "@type": "SoftwareApplication",
@@ -107,11 +96,7 @@
               "operatingSystem": "Android",
               "applicationCategory": "UtilitiesApplication",
               "downloadUrl": "https://github.com/Clashforwinodws/Clash-for-Winodows/releases/tag/v0.20.40/Clash.for.Android_0.20.40-premium-universal-release.apk",
-              "offers": {
-                "@type": "Offer",
-                "price": "0",
-                "priceCurrency": "USD"
-              }
+              "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
             },
             {
               "@type": "SoftwareApplication",
@@ -119,17 +104,48 @@
               "operatingSystem": "iOS",
               "applicationCategory": "UtilitiesApplication",
               "downloadUrl": "https://apps.apple.com/app/clashx/id1481302438",
-              "offers": {
-                "@type": "Offer",
-                "price": "0",
-                "priceCurrency": "USD"
-              }
+              "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
+            }
+          ]
+        },
+        {
+          "@type": "ItemList",
+          "name": "最新文章",
+          "itemListElement": [
+            {
+              "@type": "Article",
+              "headline": "Clash Verge Rev 的 TUN 模式原理与优化指南",
+              "url": "articles/tun-optimization.html",
+              "datePublished": "2026-07-01",
+              "description": "深入理解 TUN 模式的工作机制，学习如何提升网络吞吐量并避免常见路由冲突。"
+            },
+            {
+              "@type": "Article",
+              "headline": "如何编写高效的自定义代理规则",
+              "url": "articles/custom-rules.html",
+              "datePublished": "2026-06-28",
+              "description": "告别延迟与误判，手把手教你利用 DOMAIN-SUFFIX、GEOIP 等关键字打造最适合自己的分流策略。"
+            },
+            {
+              "@type": "Article",
+              "headline": "Clash 配置订阅失败的终极排查手册",
+              "url": "articles/subscription-troubleshoot.html",
+              "datePublished": "2026-06-20",
+              "description": "覆盖 DNS 污染、证书错误、User-Agent 拦截等常见订阅更新故障的完整解决方案。"
+            },
+            {
+              "@type": "Article",
+              "headline": "从入门到进阶：Clash 策略组完全解析",
+              "url": "articles/proxy-group-guide.html",
+              "datePublished": "2026-06-15",
+              "description": "详细介绍 select、url-test、fallback 和 load-balance 四种策略组的应用场景与配置方法。"
             }
           ]
         }
       ]
     }
   </script>
+
   <!-- 内联样式：现代、清爽、适合阅读的 GitHub Pages 风格设计 -->
   <style>
     :root {
@@ -361,6 +377,61 @@
       margin-bottom: 0.3rem;
     }
 
+    /* ========== 新增：文章列表板块样式 ========== */
+    .articles-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 1.5rem;
+      margin-top: 1.5rem;
+    }
+    .article-card {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      transition: box-shadow 0.2s, transform 0.2s;
+    }
+    .article-card:hover {
+      box-shadow: 0 8px 22px rgba(0,0,0,0.06);
+      transform: translateY(-3px);
+    }
+    .article-date {
+      font-size: 0.8rem;
+      color: #64748b;
+      margin-bottom: 0.6rem;
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+    }
+    .article-title {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 0.8rem;
+      line-height: 1.4;
+    }
+    .article-excerpt {
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+      margin-bottom: 1.2rem;
+      flex: 1;
+    }
+    .article-link {
+      text-decoration: none;
+      color: var(--primary);
+      font-weight: 600;
+      font-size: 0.9rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      margin-top: auto;
+    }
+    .article-link:hover {
+      text-decoration: underline;
+    }
+
     /* 底部 */
     footer {
       background: var(--surface);
@@ -418,7 +489,7 @@
         <div class="table-row" style="display:flex; flex-wrap:wrap; align-items:center; padding:0.8rem 0; border-bottom:1px solid var(--border);">
           <div style="flex:2; font-weight:700;">Clash for Windows (x64)</div>
           <div style="flex:1;">Windows</div>
-          <div style="flex:1;"><a class="download-btn" href="https://github.com/Clashforwinodws/Clash-for-Winodows/releases/tag/v0.20.40/Clash.for.Windows.Setup.0.20.40.exe" target="_blank" rel="noopener">下载 .zip</a></div>
+          <div style="flex:1;"><a class="download-btn" href="https://github.com/Clashforwinodws/Clash-for-Winodows/releases/tag/v0.20.40/Clash.for.Windows.Setup.0.20.40.exe" target="_blank" rel="noopener">下载 .exe</a></div>
         </div>
         <div class="table-row" style="display:flex; flex-wrap:wrap; align-items:center; padding:0.8rem 0; border-bottom:1px solid var(--border);">
           <div style="flex:2; font-weight:700;">ClashX (macOS)</div>
@@ -428,7 +499,7 @@
         <div class="table-row" style="display:flex; flex-wrap:wrap; align-items:center; padding:0.8rem 0; border-bottom:1px solid var(--border);">
           <div style="flex:2; font-weight:700;">Clash for Linux (AppImage)</div>
           <div style="flex:1;">Linux</div>
-          <div style="flex:1;"><a class="download-btn" href="https://github.com/Clashforwinodws/Clash-for-Winodows/releases/tag/v0.20.40/Clash.for.Windows-0.20.40-x64-linux.tar.gz" target="_blank" rel="noopener">下载页面</a></div>
+          <div style="flex:1;"><a class="download-btn" href="https://github.com/Clashforwinodws/Clash-for-Winodows/releases/tag/v0.20.40/Clash.for.Windows-0.20.40-x64-linux.tar.gz" target="_blank" rel="noopener">下载 .tar.gz</a></div>
         </div>
         <div class="table-row" style="display:flex; flex-wrap:wrap; align-items:center; padding:0.8rem 0; border-bottom:1px solid var(--border);">
           <div style="flex:2; font-weight:700;">Clash for Android (APK)</div>
@@ -483,6 +554,43 @@
         <div class="platform-chip">📱 iOS：Stash / Shadowrocket</div>
       </div>
       <p style="margin-top:1.2rem;">Clash Verge Rev 是当前最活跃的桌面端分支，支持 TUN 模式、系统代理、服务模式安装，完美适配 Windows 11 和 macOS Ventura 以上系统。</p>
+    </section>
+
+    <!-- ========== 新增：最新文章板块 ========== -->
+    <section class="card">
+      <h2><span>📝</span> 最新文章</h2>
+      <p style="margin-bottom:1.5rem; color:#475569;">精选配置教程、原理解析与排障指南，持续更新，助你成为 Clash 高手。</p>
+      <div class="articles-grid">
+        <!-- 文章卡片 1 -->
+        <div class="article-card">
+          <div class="article-date">📅 2026-07-01</div>
+          <div class="article-title">Clash Verge Rev 的 TUN 模式原理与优化指南</div>
+          <div class="article-excerpt">深入理解 TUN 模式的工作机制，学习如何提升网络吞吐量并避免常见路由冲突，让全局代理更稳定。</div>
+          <a href="articles/tun-optimization.html" class="article-link">阅读全文 →</a>
+        </div>
+        <!-- 文章卡片 2 -->
+        <div class="article-card">
+          <div class="article-date">📅 2026-06-28</div>
+          <div class="article-title">如何编写高效的自定义代理规则</div>
+          <div class="article-excerpt">告别延迟与误判，手把手教你利用 DOMAIN-SUFFIX、GEOIP 等关键字打造最适合自己的分流策略。</div>
+          <a href="articles/custom-rules.html" class="article-link">阅读全文 →</a>
+        </div>
+        <!-- 文章卡片 3 -->
+        <div class="article-card">
+          <div class="article-date">📅 2026-06-20</div>
+          <div class="article-title">Clash 配置订阅失败的终极排查手册</div>
+          <div class="article-excerpt">覆盖 DNS 污染、证书错误、User-Agent 拦截等常见订阅更新故障的完整解决方案，一步到位修复问题。</div>
+          <a href="articles/subscription-troubleshoot.html" class="article-link">阅读全文 →</a>
+        </div>
+        <!-- 文章卡片 4 -->
+        <div class="article-card">
+          <div class="article-date">📅 2026-06-15</div>
+          <div class="article-title">从入门到进阶：Clash 策略组完全解析</div>
+          <div class="article-excerpt">详细介绍 select、url-test、fallback 和 load-balance 四种策略组的应用场景与配置方法，灵活调度节点。</div>
+          <a href="articles/proxy-group-guide.html" class="article-link">阅读全文 →</a>
+        </div>
+      </div>
+      <p style="margin-top:1.5rem; text-align:right;"><a href="articles/" style="color:var(--primary); text-decoration:none; font-weight:500;">查看全部文章 →</a></p>
     </section>
 
     <!-- 配置指南速览（通往 tutorial.html） -->
