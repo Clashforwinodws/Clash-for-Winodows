@@ -1,1 +1,359 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>Clash Verge Rev 的 TUN 模式原理与优化指南 | 避免路由冲突与 DNS 泄漏</title>
+  
+  <!-- SEO：针对 TUN 模式深度文章，突出原理、优化、排障 -->
+  <meta name="description" content="深度解析 Clash Verge Rev 的 TUN 模式工作原理，学习如何正确配置虚拟网卡、优化路由表、解决与 cfw‑tun 等旧网卡的冲突，并彻底杜绝 DNS 泄漏，让全局代理稳定高效。">
+  <meta name="keywords" content="Clash TUN 模式, Clash Verge Rev 教程, TUN 优化, 虚拟网卡冲突, DNS 泄漏, Clash 路由配置, Clash 全局代理, cfw-tun 冲突">
+  <meta name="author" content="Clashforwindows">
+  
+  <link rel="icon" type="image/x-icon" href="../favicon.ico">
+  <link rel="shortcut icon" type="image/x-icon" href="../favicon.ico">
+  <link rel="canonical" href="https://clashforwinodws.github.io/Clash-for-Winodows/articles/tun-optimization.html">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+  <style>
+    :root {
+      --primary: #1e6f9f;
+      --primary-dark: #145a7a;
+      --bg: #ffffff;
+      --surface: #f8fafc;
+      --border: #e2e8f0;
+      --text: #1e293b;
+      --text-secondary: #475569;
+      --accent: #f59e0b;
+      --radius: 12px;
+    }
+
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: var(--bg); color: var(--text); line-height:1.6;
+      display:flex; flex-direction:column; min-height:100vh;
+    }
+
+    .navbar {
+      background: rgba(255,255,255,0.9); border-bottom:1px solid var(--border);
+      padding:0.8rem 1.5rem; display:flex; flex-wrap:wrap; align-items:center;
+      justify-content:space-between; gap:1rem; position:sticky; top:0; z-index:50;
+      backdrop-filter: blur(12px);
+    }
+    .nav-logo {
+      font-weight:700; font-size:1.3rem; color:var(--primary-dark);
+      text-decoration:none; display:flex; align-items:center; gap:0.3rem;
+    }
+    .nav-links { display:flex; flex-wrap:wrap; gap:1.8rem; list-style:none; }
+    .nav-links a {
+      text-decoration:none; color:var(--text-secondary); font-weight:500;
+      font-size:0.95rem; transition:color 0.2s; white-space:nowrap;
+    }
+    .nav-links a:hover { color:var(--primary); }
+
+    .container {
+      max-width:900px; margin:0 auto; padding:1.5rem 1.5rem 3rem; width:100%; flex:1;
+    }
+
+    .hero {
+      text-align:center; margin:2rem 0 2rem;
+    }
+    .hero h1 {
+      font-size:2.5rem; font-weight:800;
+      background: linear-gradient(135deg, #0f2b4b, #1e6f9f);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text; margin-bottom:0.75rem;
+    }
+    .hero p { font-size:1.1rem; color:var(--text-secondary); max-width:600px; margin:0 auto; }
+
+    .card {
+      background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+      padding:2rem 1.8rem; margin-bottom:2rem;
+      box-shadow:0 4px 12px rgba(0,0,0,0.02);
+    }
+    h2 {
+      font-size:1.8rem; margin:1.8rem 0 1rem; color:var(--primary-dark);
+      display:flex; align-items:center; gap:0.6rem;
+    }
+    h2:first-of-type { margin-top:0; }
+    h3 { font-size:1.3rem; margin:1.5rem 0 0.5rem; color:#334155; }
+    h4 { font-size:1.1rem; margin:1.2rem 0 0.4rem; color:#475569; }
+
+    .toc {
+      background:white; border:1px solid var(--border); border-radius:var(--radius);
+      padding:1.5rem; margin-bottom:2rem;
+    }
+    .toc ul { list-style:none; display:flex; flex-wrap:wrap; gap:0.8rem 2rem; }
+    .toc a { color:var(--primary); text-decoration:none; font-weight:500; }
+
+    .info-box {
+      background:#e6f0f8; border-left:4px solid var(--primary);
+      padding:1.2rem 1.5rem; border-radius:var(--radius); margin:1.5rem 0;
+    }
+    .warning-box {
+      background:#fff7ed; border-left:4px solid var(--accent);
+      padding:1.2rem 1.5rem; border-radius:var(--radius); margin:1.5rem 0;
+    }
+
+    .code-block {
+      background:#1e293b; color:#e2e8f0; padding:1.2rem; border-radius:var(--radius);
+      font-family: 'JetBrains Mono', monospace; font-size:0.9rem; overflow-x:auto;
+      margin:1rem 0; line-height:1.7;
+    }
+
+    .img-placeholder {
+      background:white; border:1px dashed var(--border); border-radius:var(--radius);
+      padding:2rem; text-align:center; color:var(--text-secondary); margin:1.5rem 0;
+    }
+
+    .related-grid {
+      display:grid; grid-template-columns: repeat(auto-fit, minmax(200px,1fr));
+      gap:1.2rem; margin-top:1.5rem;
+    }
+    .related-card {
+      background:white; border:1px solid var(--border); border-radius:var(--radius);
+      padding:1.2rem; text-decoration:none; color:var(--text); transition:0.2s;
+    }
+    .related-card:hover { box-shadow:0 6px 16px rgba(0,0,0,0.04); }
+    .related-card strong { display:block; margin-bottom:0.4rem; color:var(--primary-dark); }
+    .related-card p { font-size:0.9rem; color:var(--text-secondary); }
+
+    footer {
+      background:var(--surface); border-top:1px solid var(--border);
+      text-align:center; padding:1.8rem; color:var(--text-secondary); font-size:0.9rem;
+      margin-top:auto;
+    }
+    footer a { color:var(--primary); text-decoration:none; }
+
+    @media (max-width:700px) {
+      .nav-links { gap:1rem; }
+    }
+  </style>
+</head>
+<body>
+  <nav class="navbar">
+    <a href="../" class="nav-logo">⚡ Clash Hub</a>
+    <ul class="nav-links">
+      <li><a href="../">首页</a></li>
+      <li><a href="../download.html">📥 下载中心</a></li>
+      <li><a href="../tutorial.html">📘 配置教程</a></li>
+      <li><a href="../faq.html">❓ 常见问题</a></li>
+      <li><a href="../changelog.html">📋 更新日志</a></li>
+      <li><a href="../about.html">💡 关于项目</a></li>
+    </ul>
+  </nav>
+
+  <div class="container">
+    <header class="hero">
+      <h1>Clash Verge Rev 的 TUN 模式原理与优化指南</h1>
+      <p>告别路由冲突和 DNS 泄漏，让全局代理如丝般顺滑</p>
+    </header>
+
+    <!-- 文章元数据 -->
+    <div style="display:flex; justify-content:center; gap:2rem; color:var(--text-secondary); font-size:0.9rem; margin-bottom:1.5rem;">
+      <span>📅 2026-07-07</span>
+      <span>🕒 阅读时间约 8 分钟</span>
+      <span>🏷️ <a href="index.html" style="color:var(--primary);">进阶配置</a></span>
+    </div>
+
+    <!-- 目录 -->
+    <div class="toc">
+      <strong>📑 本文目录</strong>
+      <ul style="margin-top:0.6rem;">
+        <li><a href="#what-is-tun">什么是 TUN 模式？</a></li>
+        <li><a href="#how-it-works">虚拟网卡与路由表</a></li>
+        <li><a href="#pros-cons">优缺点分析</a></li>
+        <li><a href="#config-optimization">配置优化实践</a></li>
+        <li><a href="#common-issues">常见问题与排障</a></li>
+        <li><a href="#dns-leak">彻底解决 DNS 泄漏</a></li>
+        <li><a href="#summary">总结与建议</a></li>
+      </ul>
+    </div>
+
+    <!-- 正文开始 -->
+    <article>
+      <section id="what-is-tun">
+        <h2>🧠 什么是 TUN 模式？</h2>
+        <p>TUN 模式是 Clash 客户端（如 Clash Verge Rev、Clash for Windows）提供的一种高级代理方式。它通过在系统中创建一个虚拟网卡（TUN 设备），将所有网络流量（包括 TCP、UDP、ICMP 等）从系统底层重定向到 Clash 内核，由内核根据规则决定走代理还是直连。</p>
+        <p>与传统的系统代理（仅影响支持代理设置的应用）不同，TUN 模式能够覆盖所有程序，包括命令行工具、游戏、UWP 应用等，实现真正的“全局代理”。</p>
+        <div class="info-box">
+          💡 <strong>适用场景：</strong> 需要代理不支持系统代理的软件、避免个别应用绕过代理、或希望统一管理所有网络请求时，TUN 模式是最佳选择。
+        </div>
+      </section>
+
+      <section id="how-it-works">
+        <h2>🔧 虚拟网卡与路由表如何协同工作</h2>
+        <p>当 Clash 启用 TUN 模式后，系统会多出一个名为 <code>clash-tun</code> 或 <code>utun</code> 的虚拟网卡。Clash 内核通过修改系统路由表，将原本发往物理网卡的数据包引导至这个虚拟网卡。</p>
+        <h4>简单工作流程：</h4>
+        <ol style="margin-left:1.5rem; line-height:1.8;">
+          <li>应用程序发起网络请求。</li>
+          <li>系统路由表将请求指向 TUN 虚拟网卡的 IP 地址。</li>
+          <li>Clash 内核从虚拟网卡读取数据包，解析目标地址。</li>
+          <li>匹配规则：直连流量直接转发到真实物理网卡；代理流量通过节点加密发送。</li>
+        </ol>
+        <div class="img-placeholder">
+          [ 图示：系统流量 → 路由表 → TUN 虚拟网卡 → Clash 内核 → 规则判断 → 物理网卡或代理节点 ]
+        </div>
+        <p>路由表是其中最关键的一环。如果系统中残留了其他 VPN 或代理软件创建的虚拟网卡（例如旧版 CFW 的 <code>cfw-tun</code>），就可能出现多条默认路由，导致流量走错接口。</p>
+      </section>
+
+      <section id="pros-cons">
+        <h2>⚖️ TUN 模式的优缺点</h2>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:1.5rem; margin-top:1rem;">
+          <div style="background:white; border:1px solid var(--border); border-radius:var(--radius); padding:1.5rem;">
+            <h4 style="color:var(--primary-dark);">✅ 优点</h4>
+            <ul style="margin-left:1.2rem;">
+              <li>真正全局代理，不遗漏任何应用</li>
+              <li>支持 UDP 和 ICMP，游戏、语音通话更稳定</li>
+              <li>无需单独设置每个程序的代理</li>
+              <li>配合规则可实现精细分流</li>
+            </ul>
+          </div>
+          <div style="background:white; border:1px solid var(--border); border-radius:var(--radius); padding:1.5rem;">
+            <h4 style="color:#b45309;">⚠️ 缺点</h4>
+            <ul style="margin-left:1.2rem;">
+              <li>需要管理员/root 权限</li>
+              <li>可能与其它 VPN 软件冲突</li>
+              <li>配置不当易导致断网或 DNS 泄漏</li>
+              <li>对系统资源有一定消耗</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <section id="config-optimization">
+        <h2>🚀 配置优化实践</h2>
+        <h3>1. 内核与客户端选择</h3>
+        <p>推荐使用 <strong>Clash Verge Rev</strong> 并搭配最新版 <strong>Clash Meta</strong> 内核，它们对 TUN 的兼容性和性能优化更好。你可以从 <a href="../download.html">下载中心</a> 获取安装包。</p>
+        
+        <h3>2. 调整 TUN 相关参数</h3>
+        <p>在配置文件（YAML）中，可以微调以下字段来提升体验：</p>
+        <div class="code-block"><pre>tun:
+  enable: true
+  stack: system    # 或 gvisor，Linux 下推荐 system
+  dns-hijack:
+    - any:53       # 劫持 DNS 请求防止泄漏
+  auto-route: true # 自动管理路由表
+  auto-detect-interface: true</pre></div>
+        <p>Windows 用户若遇到与 <code>cfw-tun</code> 等旧网卡的冲突，可参考下文排障部分彻底清理。</p>
+        
+        <h3>3. 配合 DNS 设置</h3>
+        <p>TUN 模式下务必启用 DNS 劫持，并配置可信的上游 DNS，否则会出现 DNS 泄漏。请跳至 <a href="#dns-leak">DNS 泄漏章节</a> 获取完整方案。</p>
+      </section>
+
+      <section id="common-issues">
+        <h2>🛠️ 常见问题与排障</h2>
+        
+        <div class="warning-box">
+          <strong>🔥 高频问题：系统中同时存在 cfw‑tun 和 clash‑tun 导致路由冲突</strong>
+          <p style="margin-top:0.5rem;">从 Clash for Windows 迁移到 Clash Verge Rev 后，旧版 CFW 创建的 <code>cfw-tun</code> 虚拟网卡可能未完全删除，导致两条默认路由并存，部分流量走错接口。</p>
+        </div>
+        <h4>彻底清除残留虚拟网卡（Windows）：</h4>
+        <ol style="margin-left:1.5rem;">
+          <li>打开“设备管理器” → 查看 → 显示隐藏的设备。</li>
+          <li>在“网络适配器”中找到 <code>cfw-tun</code>，右键卸载（勾选“删除此设备的驱动程序软件”）。</li>
+          <li>以管理员身份运行命令提示符，执行：
+            <div class="code-block">netcfg -d</div>
+            （注意：这会重置网络设置，可能需要重启）
+          </li>
+          <li>重启电脑后，再开启 Clash Verge Rev 的 TUN 模式。</li>
+        </ol>
+        
+        <h4>macOS / Linux 下的类似冲突：</h4>
+        <p>在终端使用 <code>ifconfig</code> 查看所有网络接口，找到类似 <code>utun</code> 或旧版 Clash 接口，通过系统偏好设置或网络配置文件移除。</p>
+        
+        <h4>开启 TUN 后无法上网？</h4>
+        <p>首先检查 <a href="../tutorial.html">配置文件</a> 中是否有正确的规则和策略组。可临时将模式切换为“全局”测试，若能上网则说明规则需要调整。若全局也不行，检查系统防火墙是否拦截了 Clash 进程。</p>
+      </section>
+
+      <section id="dns-leak">
+        <h2>🔒 彻底解决 DNS 泄漏</h2>
+        <p>DNS 泄漏是指虽然流量走了代理，但 DNS 解析请求仍通过本地网络发送给 ISP，暴露了你访问的网站域名。TUN 模式必须配合 DNS 劫持才能避免此问题。</p>
+        <h4>推荐配置：</h4>
+        <div class="code-block"><pre>dns:
+  enable: true
+  listen: 0.0.0.0:53
+  enhanced-mode: fake-ip   # 或 redir-host
+  fake-ip-range: 198.18.0.1/16
+  nameserver:
+    - 223.5.5.5
+    - 114.114.114.114
+  fallback:
+    - 8.8.8.8
+    - 1.1.1.1
+  fallback-filter:
+    geoip: true
+    geoip-code: CN</pre></div>
+        <p>同时确保 Clash 客户端中开启了“DNS 劫持”选项。这样所有 DNS 请求都会被虚拟网卡拦截，并统一由 Clash 处理，避免绕过代理。</p>
+        <p>更多 DNS 调优技巧，可以参考我们的 <a href="custom-rules.html">自定义规则文章</a>。</p>
+      </section>
+
+      <section id="summary">
+        <h2>📌 总结与行动建议</h2>
+        <ul style="margin-left:1.5rem; line-height:2;">
+          <li>升级到 <a href="../download.html">最新版 Clash Verge Rev</a>，使用 Clash Meta 内核。</li>
+          <li>检查系统虚拟网卡，彻底删除旧版残留。</li>
+          <li>优化 YAML 配置文件中的 TUN 和 DNS 段落。</li>
+          <li>遇到奇怪网络问题时，优先查看路由表和 Clash 日志。</li>
+        </ul>
+        <div class="info-box">
+          🔗 <strong>延伸阅读：</strong> 如果你对 TUN 模式下的规则编写还不熟悉，强烈建议阅读 <a href="custom-rules.html">《如何编写高效的自定义代理规则》</a> 以及 <a href="proxy-group-guide.html">《Clash 策略组完全解析》</a>，它们能让你的分流方案更加智能。
+        </div>
+      </section>
+    </article>
+
+    <!-- 相关文章推荐 -->
+    <section>
+      <h2>📚 相关文章</h2>
+      <div class="related-grid">
+        <a href="custom-rules.html" class="related-card">
+          <strong>📝 如何编写高效的自定义代理规则</strong>
+          <p>利用 DOMAIN‑SUFFIX、GEOIP 等关键字精细控制流量走向。</p>
+        </a>
+        <a href="subscription-troubleshoot.html" class="related-card">
+          <strong>🔧 订阅失败终极排查手册</strong>
+          <p>解决订阅更新时遇到的 DNS 污染、证书错误等问题。</p>
+        </a>
+        <a href="proxy-group-guide.html" class="related-card">
+          <strong>📖 Clash 策略组完全解析</strong>
+          <p>掌握 select、url‑test、fallback 和 load‑balance 的用法。</p>
+        </a>
+        <a href="../faq.html" class="related-card">
+          <strong>❓ 常见问题解答</strong>
+          <p>安装、配置、连接等各类故障的官方解答汇总。</p>
+        </a>
+      </div>
+    </section>
+  </div>
+
+  <footer>
+    <p>© 2026 Clash 下载站 · 基于开源项目 Clash 构建 · <a href="https://clashforwinodws.github.io/Clash-for-Winodows/">clashforwinodws.github.io</a></p>
+    <p style="margin-top:0.4rem;">本站仅提供客户端下载与使用教程，不提供任何代理服务。</p>
+  </footer>
+
+  <!-- 结构化数据：Article -->
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Article",
+      "headline": "Clash Verge Rev 的 TUN 模式原理与优化指南",
+      "author": {
+        "@type": "Organization",
+        "name": "Clashforwindows"
+      },
+      "datePublished": "2026-07-07",
+      "description": "深度解析 Clash Verge Rev 的 TUN 模式工作原理，学习如何正确配置虚拟网卡、优化路由表、解决与 cfw‑tun 等旧网卡的冲突，并彻底杜绝 DNS 泄漏。",
+      "image": "https://clashforwinodws.github.io/Clash-for-Winodows/favicon.ico",
+      "publisher": {
+        "@type": "Organization",
+        "name": "Clashforwindows",
+        "logo": {
+          "@type": "ImageObject",
+          "url": "https://clashforwinodws.github.io/Clash-for-Winodows/favicon.ico"
+        }
+      }
+    }
+  </script>
+</body>
+</html>
