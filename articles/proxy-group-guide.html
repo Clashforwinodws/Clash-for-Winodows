@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>从入门到进阶：Clash 策略组完全解析 · select/url-test/fallback/load-balance | 让节点调度更聪明</title>
+  
+  <!-- SEO：策略组深度解析，突出四种类型、组合用法、自动化调度 -->
+  <meta name="description" content="彻底搞懂 Clash 的 select、url-test、fallback 和 load-balance 四种策略组。从手动选择到全自动负载均衡，手把手教你搭建高可用、低延迟的智能节点调度系统，告别断流与卡顿。">
+  <meta name="keywords" content="Clash 策略组, proxy-groups, url-test, fallback, load-balance, select, 策略组配置, Clash 节点调度, Clash 自动选择节点">
+  <meta name="author" content="Clashforwindows">
+  
+  <link rel="icon" type="image/x-icon" href="../favicon.ico">
+  <link rel="shortcut icon" type="image/x-icon" href="../favicon.ico">
+  <link rel="canonical" href="https://clashforwinodws.github.io/Clash-for-Winodows/articles/proxy-group-guide.html">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <style>
+    :root {
+      --primary: #1e6f9f;
+      --primary-dark: #145a7a;
+      --bg: #ffffff;
+      --surface: #f8fafc;
+      --border: #e2e8f0;
+      --text: #1e293b;
+      --text-secondary: #475569;
+      --accent: #f59e0b;
+      --radius: 12px;
+    }
+
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: var(--bg); color: var(--text); line-height:1.6;
+      display:flex; flex-direction:column; min-height:100vh;
+    }
+
+    .navbar {
+      background: rgba(255,255,255,0.9); border-bottom:1px solid var(--border);
+      padding:0.8rem 1.5rem; display:flex; flex-wrap:wrap; align-items:center;
+      justify-content:space-between; gap:1rem; position:sticky; top:0; z-index:50;
+      backdrop-filter: blur(12px);
+    }
+    .nav-logo {
+      font-weight:700; font-size:1.3rem; color:var(--primary-dark);
+      text-decoration:none; display:flex; align-items:center; gap:0.3rem;
+    }
+    .nav-links { display:flex; flex-wrap:wrap; gap:1.8rem; list-style:none; }
+    .nav-links a {
+      text-decoration:none; color:var(--text-secondary); font-weight:500;
+      font-size:0.95rem; transition:color 0.2s; white-space:nowrap;
+    }
+    .nav-links a:hover { color:var(--primary); }
+
+    .container {
+      max-width:900px; margin:0 auto; padding:1.5rem 1.5rem 3rem; width:100%; flex:1;
+    }
+
+    .hero {
+      text-align:center; margin:2rem 0 2rem;
+    }
+    .hero h1 {
+      font-size:2.5rem; font-weight:800;
+      background: linear-gradient(135deg, #0f2b4b, #1e6f9f);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text; margin-bottom:0.75rem;
+    }
+    .hero p { font-size:1.1rem; color:var(--text-secondary); max-width:600px; margin:0 auto; }
+
+    .card {
+      background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+      padding:2rem 1.8rem; margin-bottom:2rem;
+      box-shadow:0 4px 12px rgba(0,0,0,0.02);
+    }
+    h2 {
+      font-size:1.8rem; margin:1.8rem 0 1rem; color:var(--primary-dark);
+      display:flex; align-items:center; gap:0.6rem;
+    }
+    h2:first-of-type { margin-top:0; }
+    h3 { font-size:1.3rem; margin:1.5rem 0 0.5rem; color:#334155; }
+    h4 { font-size:1.1rem; margin:1.2rem 0 0.4rem; color:#475569; }
+
+    .toc {
+      background:white; border:1px solid var(--border); border-radius:var(--radius);
+      padding:1.5rem; margin-bottom:2rem;
+    }
+    .toc ul { list-style:none; display:flex; flex-wrap:wrap; gap:0.8rem 2rem; }
+    .toc a { color:var(--primary); text-decoration:none; font-weight:500; }
+
+    .info-box {
+      background:#e6f0f8; border-left:4px solid var(--primary);
+      padding:1.2rem 1.5rem; border-radius:var(--radius); margin:1.5rem 0;
+    }
+    .warning-box {
+      background:#fff7ed; border-left:4px solid var(--accent);
+      padding:1.2rem 1.5rem; border-radius:var(--radius); margin:1.5rem 0;
+    }
+
+    .code-block {
+      background:#1e293b; color:#e2e8f0; padding:1.2rem; border-radius:var(--radius);
+      font-family: 'JetBrains Mono', monospace; font-size:0.9rem; overflow-x:auto;
+      margin:1rem 0; line-height:1.7;
+    }
+
+    .strategy-grid {
+      display:grid; grid-template-columns: repeat(auto-fit, minmax(200px,1fr));
+      gap:1.5rem; margin:1.5rem 0;
+    }
+    .strategy-card {
+      background:white; border:1px solid var(--border); border-radius:var(--radius);
+      padding:1.5rem; text-align:center;
+    }
+    .strategy-card h4 { margin-top:0; }
+
+    .table-wrap {
+      overflow-x:auto; margin:1.5rem 0;
+    }
+    table {
+      width:100%; border-collapse:collapse; background:white; border-radius:var(--radius);
+      overflow:hidden; border:1px solid var(--border);
+    }
+    th, td {
+      padding:0.8rem 1rem; text-align:left; border-bottom:1px solid var(--border);
+      font-size:0.95rem;
+    }
+    th { background:var(--surface); font-weight:600; color:var(--primary-dark); }
+    tr:last-child td { border-bottom:none; }
+
+    .related-grid {
+      display:grid; grid-template-columns: repeat(auto-fit, minmax(200px,1fr));
+      gap:1.2rem; margin-top:1.5rem;
+    }
+    .related-card {
+      background:white; border:1px solid var(--border); border-radius:var(--radius);
+      padding:1.2rem; text-decoration:none; color:var(--text); transition:0.2s;
+    }
+    .related-card:hover { box-shadow:0 6px 16px rgba(0,0,0,0.04); }
+    .related-card strong { display:block; margin-bottom:0.4rem; color:var(--primary-dark); }
+    .related-card p { font-size:0.9rem; color:var(--text-secondary); }
+
+    footer {
+      background:var(--surface); border-top:1px solid var(--border);
+      text-align:center; padding:1.8rem; color:var(--text-secondary); font-size:0.9rem;
+      margin-top:auto;
+    }
+    footer a { color:var(--primary); text-decoration:none; }
+
+    @media (max-width:700px) {
+      .nav-links { gap:1rem; }
+    }
+  </style>
+</head>
+<body>
+  <nav class="navbar">
+    <a href="../" class="nav-logo">⚡ Clash Hub</a>
+    <ul class="nav-links">
+      <li><a href="../">首页</a></li>
+      <li><a href="../download.html">📥 下载中心</a></li>
+      <li><a href="../tutorial.html">📘 配置教程</a></li>
+      <li><a href="../faq.html">❓ 常见问题</a></li>
+      <li><a href="../changelog.html">📋 更新日志</a></li>
+      <li><a href="../about.html">💡 关于项目</a></li>
+    </ul>
+  </nav>
+
+  <div class="container">
+    <header class="hero">
+      <h1>从入门到进阶：Clash 策略组完全解析</h1>
+      <p>掌握四种节点调度方式，让代理永远快人一步</p>
+    </header>
+
+    <div style="display:flex; justify-content:center; gap:2rem; color:var(--text-secondary); font-size:0.9rem; margin-bottom:1.5rem;">
+      <span>📅 2026-07-07</span>
+      <span>🕒 阅读时间约 8 分钟</span>
+      <span>🏷️ <a href="index.html" style="color:var(--primary);">入门基础</a></span>
+    </div>
+
+    <div class="toc">
+      <strong>📑 本文目录</strong>
+      <ul style="margin-top:0.6rem;">
+        <li><a href="#what-are-groups">什么是策略组？</a></li>
+        <li><a href="#select">手动选择：select</a></li>
+        <li><a href="#url-test">自动延迟测试：url-test</a></li>
+        <li><a href="#fallback">故障转移：fallback</a></li>
+        <li><a href="#load-balance">负载均衡：load-balance</a></li>
+        <li><a href="#combine">组合策略实战</a></li>
+        <li><a href="#mistakes">常见误区与最佳实践</a></li>
+      </ul>
+    </div>
+
+    <article>
+      <section id="what-are-groups">
+        <h2>🧩 什么是策略组？</h2>
+        <p>策略组 (proxy-groups) 是 Clash 分流系统的核心，它把多个代理节点组合成一个逻辑单元，并定义选择这些节点的策略。当一条规则引用了某个策略组，该组就会按照你设定的方式（手动选、自动测速、故障转移或负载均衡）挑选出一个节点来完成请求。</p>
+        <p>简单说：<strong>节点是原材料，策略组是调度算法。</strong> 合理使用策略组，可以让你在多个服务器之间无缝切换，始终保持最佳的网络体验。</p>
+        <div class="info-box">
+          💡 <strong>基础概念：</strong> 每个策略组需要一个名称、一个类型 (type) 和一个节点列表 (proxies)。类型决定了选点逻辑，节点列表可以是具体的节点名称，也可以是其他策略组的名称（实现嵌套）。
+        </div>
+      </section>
+
+      <section id="select">
+        <h2>🖱️ 手动选择：select</h2>
+        <p>最基础的策略组类型，由用户手动指定当前使用的节点或策略。它不会自动切换，适合需要固定出口的场景，例如：</p>
+        <ul style="margin-left:1.5rem;">
+          <li>需要固定某个 IP 访问特定网站（如银行、内部系统）</li>
+          <li>临时调试某个节点时，不希望自动跳转</li>
+        </ul>
+        <div class="code-block"><pre>proxy-groups:
+  - name: "手动选择"
+    type: select
+    proxies:
+      - "日本节点"
+      - "新加坡节点"
+      - "美国节点"
+      - DIRECT</pre></div>
+        <p>客户端界面会显示为一个下拉菜单，你可以随时手动切换。常作为顶级策略组，让其他自动策略组引用它。</p>
+      </section>
+
+      <section id="url-test">
+        <h2>⚡ 自动延迟测试：url-test</h2>
+        <p>这种策略组会定期向指定的 URL 发送请求，测量每个节点的延迟，然后自动选择延迟最低的那个。非常适合对响应速度敏感的场景，比如浏览网页、看视频。</p>
+        <div class="code-block"><pre>proxy-groups:
+  - name: "自动低延迟"
+    type: url-test
+    proxies:
+      - "日本节点"
+      - "新加坡节点"
+      - "美国节点"
+    url: 'http://www.gstatic.com/generate_204'
+    interval: 300   # 每300秒测试一次</pre></div>
+        <p>注意，<code>url</code> 必须填写一个能快速返回 HTTP 204 或 200 的地址。Google 的 generate_204 页面是目前最常用的测试目标。</p>
+      </section>
+
+      <section id="fallback">
+        <h2>🔄 故障转移：fallback</h2>
+        <p>按顺序尝试节点，当第一个节点不可用（连接失败或超时）时，自动切换到下一个。这实现了高可用性，确保只要有一个节点在线，代理就不会中断。</p>
+        <div class="code-block"><pre>proxy-groups:
+  - name: "高可用组"
+    type: fallback
+    proxies:
+      - "主节点"
+      - "备用节点1"
+      - "备用节点2"
+    url: 'http://www.gstatic.com/generate_204'
+    interval: 300</pre></div>
+        <p>fallback 策略在任意时刻只使用一个节点（按顺序），不会因为延迟高低而切换，仅因故障切换。它与 url-test 的区别在于：url-test 选延迟最低的，fallback 优先用列表中的第一个。</p>
+      </section>
+
+      <section id="load-balance">
+        <h2>⚖️ 负载均衡：load-balance</h2>
+        <p>将请求轮流或随机分配到多个节点上，充分利用多条线路的带宽。适合下载大文件、多线程任务等需要分摊流量的场景。Clash 目前支持 <code>load-balance</code> 类型，可选算法为 <code>round-robin</code> (轮询) 或 <code>consistent-hashing</code> (一致性哈希)。</p>
+        <div class="code-block"><pre>proxy-groups:
+  - name: "下载组"
+    type: load-balance
+    proxies:
+      - "节点A"
+      - "节点B"
+      - "节点C"
+    url: 'http://www.gstatic.com/generate_204'
+    interval: 300
+    strategy: round-robin   # 轮询分配</pre></div>
+        <p>需要注意的是，负载均衡可能导致同一会话的不同请求走到不同节点，某些网站可能会因为 IP 频繁变化而触发安全验证。建议仅为支持断点续传的下载或 API 请求使用。</p>
+      </section>
+
+      <section id="combine">
+        <h2>🔗 组合策略实战</h2>
+        <p>单个策略组往往无法满足复杂需求，真正的威力在于嵌套和组合。以下是一个典型的“多级调度”配置，可同时兼顾手动控制、自动低延迟和高可用：</p>
+        <div class="code-block"><pre>proxy-groups:
+  - name: "顶级选择"
+    type: select
+    proxies:
+      - "自动低延迟"
+      - "高可用组"
+      - "下载组"
+      - DIRECT
+
+  - name: "自动低延迟"
+    type: url-test
+    proxies:
+      - "日本节点"
+      - "新加坡节点"
+      - "美国节点"
+    url: 'http://www.gstatic.com/generate_204'
+    interval: 300
+
+  - name: "高可用组"
+    type: fallback
+    proxies:
+      - "主节点"
+      - "备用节点1"
+      - "备用节点2"
+    url: 'http://www.gstatic.com/generate_204'
+    interval: 300
+
+  - name: "下载组"
+    type: load-balance
+    strategy: round-robin
+    proxies:
+      - "大带宽节点A"
+      - "大带宽节点B"</pre></div>
+        <p>然后在规则中引用“顶级选择”，即可在客户端界面快速切换整体策略，无需反复修改规则。进一步结合 <a href="custom-rules.html">自定义代理规则</a>，可以对不同流量使用不同策略组，例如视频流量走自动低延迟，下载流量走负载均衡。</p>
+      </section>
+
+      <section id="mistakes">
+        <h2>🚫 常见误区与最佳实践</h2>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>误区</th><th>正确做法</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>所有流量都用一个策略组</td>
+                <td>根据应用场景拆分：网页用 url-test，下载用 load-balance，重要服务用 fallback</td>
+              </tr>
+              <tr>
+                <td>url-test 测试间隔太短</td>
+                <td>建议 300 秒以上，太频繁会增加服务器负担且消耗流量</td>
+              </tr>
+              <tr>
+                <td>负载均衡用于访问网站</td>
+                <td>仅用于无状态的 API 或下载，避免触发目标站点的安全机制</td>
+              </tr>
+              <tr>
+                <td>fallback 没有配置测试 URL</td>
+                <td>务必配置 <code>url</code>，否则无法判断节点是否健康</td>
+              </tr>
+              <tr>
+                <td>策略组嵌套时出现循环引用</td>
+                <td>检查 proxy-groups 中不要出现 A 引用 B 同时 B 引用 A 的情况</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <h4>最佳实践总结</h4>
+        <ul style="margin-left:1.5rem; line-height:2;">
+          <li>顶层使用 <code>select</code>，方便在客户端快速切换全局策略。</li>
+          <li>将 <code>url-test</code> 用于日常浏览，保持低延迟。</li>
+          <li>为关键服务配置 <code>fallback</code>，确保永不掉线。</li>
+          <li>将 <code>load-balance</code> 仅限于下载或 API 流量，并配合规则限定域名。</li>
+          <li>定期检查节点的实际可用性，及时清理失效节点。</li>
+        </ul>
+        <p>想要让策略组真正发挥价值，还需要与 <a href="custom-rules.html">自定义规则</a> 和 <a href="tun-optimization.html">TUN 模式</a> 配合使用，实现按域名、按应用分流。如果遇到订阅更新导致节点变更，可参考 <a href="subscription-troubleshoot.html">订阅排障手册</a> 保证节点列表准确。</p>
+      </section>
+    </article>
+
+    <section>
+      <h2>📚 继续探索</h2>
+      <div class="related-grid">
+        <a href="custom-rules.html" class="related-card">
+          <strong>📝 自定义规则编写</strong>
+          <p>让不同流量精准命中不同策略组。</p>
+        </a>
+        <a href="tun-optimization.html" class="related-card">
+          <strong>🚀 TUN 模式原理与优化</strong>
+          <p>全局接管流量，发挥策略组最大效能。</p>
+        </a>
+        <a href="subscription-troubleshoot.html" class="related-card">
+          <strong>🔧 订阅失败排查手册</strong>
+          <p>确保节点列表始终可用。</p>
+        </a>
+        <a href="../tutorial.html" class="related-card">
+          <strong>📘 配置教程总览</strong>
+          <p>从零搭建 Clash 配置文件。</p>
+        </a>
+      </div>
+    </section>
+  </div>
+
+  <footer>
+    <p>© 2026 Clash 下载站 · 基于开源项目 Clash 构建 · <a href="https://clashforwinodws.github.io/Clash-for-Winodows/">clashforwinodws.github.io</a></p>
+    <p style="margin-top:0.4rem;">本站仅提供客户端下载与使用教程，不提供任何代理服务。</p>
+  </footer>
+
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Article",
+      "headline": "从入门到进阶：Clash 策略组完全解析",
+      "author": {
+        "@type": "Organization",
+        "name": "Clashforwindows"
+      },
+      "datePublished": "2026-07-07",
+      "description": "深入讲解 select、url-test、fallback、load-balance 四种策略组的用法与组合实战，助你搭建智能代理调度系统。",
+      "image": "https://clashforwinodws.github.io/Clash-for-Winodows/favicon.ico",
+      "publisher": {
+        "@type": "Organization",
+        "name": "Clashforwindows",
+        "logo": {
+          "@type": "ImageObject",
+          "url": "https://clashforwinodws.github.io/Clash-for-Winodows/favicon.ico"
+        }
+      }
+    }
+  </script>
+</body>
+</html>
