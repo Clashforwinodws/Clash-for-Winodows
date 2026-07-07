@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>如何编写高效的自定义代理规则 · Clash 规则配置进阶 | 让流量分流更精准</title>
+  
+  <!-- SEO：针对自定义规则文章，突出规则语法、实战、效率 -->
+  <meta name="description" content="告别盲目分流！本文深入讲解 Clash 规则系统的 DOMAIN、DOMAIN-SUFFIX、GEOIP、IP-CIDR 等匹配类型，分享实用案例与调试技巧，助你编写出更高效、更稳定的自定义代理规则。">
+  <meta name="keywords" content="Clash 自定义规则, Clash 规则配置, DOMAIN-SUFFIX, GEOIP, Clash 分流, 代理规则优化, Clash 规则优先级, 规则调试">
+  <meta name="author" content="Clashforwindows">
+  
+  <link rel="icon" type="image/x-icon" href="../favicon.ico">
+  <link rel="shortcut icon" type="image/x-icon" href="../favicon.ico">
+  <link rel="canonical" href="https://clashforwinodws.github.io/Clash-for-Winodows/articles/custom-rules.html">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <style>
+    :root {
+      --primary: #1e6f9f;
+      --primary-dark: #145a7a;
+      --bg: #ffffff;
+      --surface: #f8fafc;
+      --border: #e2e8f0;
+      --text: #1e293b;
+      --text-secondary: #475569;
+      --accent: #f59e0b;
+      --radius: 12px;
+    }
+
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: var(--bg); color: var(--text); line-height:1.6;
+      display:flex; flex-direction:column; min-height:100vh;
+    }
+
+    .navbar {
+      background: rgba(255,255,255,0.9); border-bottom:1px solid var(--border);
+      padding:0.8rem 1.5rem; display:flex; flex-wrap:wrap; align-items:center;
+      justify-content:space-between; gap:1rem; position:sticky; top:0; z-index:50;
+      backdrop-filter: blur(12px);
+    }
+    .nav-logo {
+      font-weight:700; font-size:1.3rem; color:var(--primary-dark);
+      text-decoration:none; display:flex; align-items:center; gap:0.3rem;
+    }
+    .nav-links { display:flex; flex-wrap:wrap; gap:1.8rem; list-style:none; }
+    .nav-links a {
+      text-decoration:none; color:var(--text-secondary); font-weight:500;
+      font-size:0.95rem; transition:color 0.2s; white-space:nowrap;
+    }
+    .nav-links a:hover { color:var(--primary); }
+
+    .container {
+      max-width:900px; margin:0 auto; padding:1.5rem 1.5rem 3rem; width:100%; flex:1;
+    }
+
+    .hero {
+      text-align:center; margin:2rem 0 2rem;
+    }
+    .hero h1 {
+      font-size:2.5rem; font-weight:800;
+      background: linear-gradient(135deg, #0f2b4b, #1e6f9f);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text; margin-bottom:0.75rem;
+    }
+    .hero p { font-size:1.1rem; color:var(--text-secondary); max-width:600px; margin:0 auto; }
+
+    .card {
+      background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+      padding:2rem 1.8rem; margin-bottom:2rem;
+      box-shadow:0 4px 12px rgba(0,0,0,0.02);
+    }
+    h2 {
+      font-size:1.8rem; margin:1.8rem 0 1rem; color:var(--primary-dark);
+      display:flex; align-items:center; gap:0.6rem;
+    }
+    h2:first-of-type { margin-top:0; }
+    h3 { font-size:1.3rem; margin:1.5rem 0 0.5rem; color:#334155; }
+    h4 { font-size:1.1rem; margin:1.2rem 0 0.4rem; color:#475569; }
+
+    .toc {
+      background:white; border:1px solid var(--border); border-radius:var(--radius);
+      padding:1.5rem; margin-bottom:2rem;
+    }
+    .toc ul { list-style:none; display:flex; flex-wrap:wrap; gap:0.8rem 2rem; }
+    .toc a { color:var(--primary); text-decoration:none; font-weight:500; }
+
+    .info-box {
+      background:#e6f0f8; border-left:4px solid var(--primary);
+      padding:1.2rem 1.5rem; border-radius:var(--radius); margin:1.5rem 0;
+    }
+    .warning-box {
+      background:#fff7ed; border-left:4px solid var(--accent);
+      padding:1.2rem 1.5rem; border-radius:var(--radius); margin:1.5rem 0;
+    }
+
+    .code-block {
+      background:#1e293b; color:#e2e8f0; padding:1.2rem; border-radius:var(--radius);
+      font-family: 'JetBrains Mono', monospace; font-size:0.9rem; overflow-x:auto;
+      margin:1rem 0; line-height:1.7;
+    }
+
+    .table-wrap {
+      overflow-x:auto; margin:1.5rem 0;
+    }
+    table {
+      width:100%; border-collapse:collapse; background:white; border-radius:var(--radius);
+      overflow:hidden; border:1px solid var(--border);
+    }
+    th, td {
+      padding:0.8rem 1rem; text-align:left; border-bottom:1px solid var(--border);
+      font-size:0.95rem;
+    }
+    th { background:var(--surface); font-weight:600; color:var(--primary-dark); }
+    tr:last-child td { border-bottom:none; }
+
+    .related-grid {
+      display:grid; grid-template-columns: repeat(auto-fit, minmax(200px,1fr));
+      gap:1.2rem; margin-top:1.5rem;
+    }
+    .related-card {
+      background:white; border:1px solid var(--border); border-radius:var(--radius);
+      padding:1.2rem; text-decoration:none; color:var(--text); transition:0.2s;
+    }
+    .related-card:hover { box-shadow:0 6px 16px rgba(0,0,0,0.04); }
+    .related-card strong { display:block; margin-bottom:0.4rem; color:var(--primary-dark); }
+    .related-card p { font-size:0.9rem; color:var(--text-secondary); }
+
+    footer {
+      background:var(--surface); border-top:1px solid var(--border);
+      text-align:center; padding:1.8rem; color:var(--text-secondary); font-size:0.9rem;
+      margin-top:auto;
+    }
+    footer a { color:var(--primary); text-decoration:none; }
+
+    @media (max-width:700px) {
+      .nav-links { gap:1rem; }
+    }
+  </style>
+</head>
+<body>
+  <nav class="navbar">
+    <a href="../" class="nav-logo">⚡ Clash Hub</a>
+    <ul class="nav-links">
+      <li><a href="../">首页</a></li>
+      <li><a href="../download.html">📥 下载中心</a></li>
+      <li><a href="../tutorial.html">📘 配置教程</a></li>
+      <li><a href="../faq.html">❓ 常见问题</a></li>
+      <li><a href="../changelog.html">📋 更新日志</a></li>
+      <li><a href="../about.html">💡 关于项目</a></li>
+    </ul>
+  </nav>
+
+  <div class="container">
+    <header class="hero">
+      <h1>如何编写高效的自定义代理规则</h1>
+      <p>掌握匹配逻辑，让每一字节流量都走对路线</p>
+    </header>
+
+    <div style="display:flex; justify-content:center; gap:2rem; color:var(--text-secondary); font-size:0.9rem; margin-bottom:1.5rem;">
+      <span>📅 2026-07-07</span>
+      <span>🕒 阅读时间约 7 分钟</span>
+      <span>🏷️ <a href="index.html" style="color:var(--primary);">进阶配置</a></span>
+    </div>
+
+    <div class="toc">
+      <strong>📑 本文目录</strong>
+      <ul style="margin-top:0.6rem;">
+        <li><a href="#rule-basics">规则基础与匹配流程</a></li>
+        <li><a href="#rule-types">常用规则类型速查</a></li>
+        <li><a href="#examples">实战案例：打造智能分流</a></li>
+        <li><a href="#priority">规则顺序与优先级</a></li>
+        <li><a href="#debugging">调试与验证技巧</a></li>
+        <li><a href="#best-practices">最佳实践总结</a></li>
+      </ul>
+    </div>
+
+    <article>
+      <section id="rule-basics">
+        <h2>🧩 规则基础：匹配流程</h2>
+        <p>Clash 的规则引擎按顺序从上到下匹配，一旦命中即停止，不再继续检查后续规则。因此，<strong>规则的顺序至关重要</strong>。一个请求会依次经过每条规则的检查，直到找到第一个符合条件的规则，然后使用该规则指定的策略组（如 PROXY、DIRECT、REJECT 等）。</p>
+        <div class="info-box">
+          💡 <strong>核心原则：</strong> 精确规则靠前，模糊规则靠后；特定域名优先于泛域名，IP 范围优先于 GEOIP。
+        </div>
+        <p>如果没有命中任何规则，Clash 会使用最后的 <code>MATCH</code> 规则（通常设置为默认策略组）。因此务必保证规则末尾有一条 <code>MATCH</code>。</p>
+      </section>
+
+      <section id="rule-types">
+        <h2>📋 常用规则类型速查</h2>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>规则类型</th><th>语法示例</th><th>说明</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>DOMAIN</td>
+                <td><code>DOMAIN,google.com,PROXY</code></td>
+                <td>精确匹配域名，不含子域名</td>
+              </tr>
+              <tr>
+                <td>DOMAIN-SUFFIX</td>
+                <td><code>DOMAIN-SUFFIX,youtube.com,PROXY</code></td>
+                <td>匹配域名后缀，含所有子域名</td>
+              </tr>
+              <tr>
+                <td>DOMAIN-KEYWORD</td>
+                <td><code>DOMAIN-KEYWORD,facebook,PROXY</code></td>
+                <td>匹配域名包含关键字</td>
+              </tr>
+              <tr>
+                <td>GEOIP</td>
+                <td><code>GEOIP,CN,DIRECT</code></td>
+                <td>根据 IP 地理位置数据库匹配</td>
+              </tr>
+              <tr>
+                <td>IP-CIDR</td>
+                <td><code>IP-CIDR,10.0.0.0/8,DIRECT</code></td>
+                <td>匹配 IP 地址段</td>
+              </tr>
+              <tr>
+                <td>MATCH</td>
+                <td><code>MATCH,PROXY</code></td>
+                <td>匹配所有请求，必须放在最后</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p>此外，Clash Meta 等内核还支持 <code>DOMAIN-REGEX</code>（正则匹配）、<code>AND/OR</code> 逻辑组合等高级规则，可进一步精细控制。</p>
+      </section>
+
+      <section id="examples">
+        <h2>⚡ 实战案例：打造智能分流</h2>
+        <h3>场景一：国内直连、国外代理</h3>
+        <p>这是最常见的“白名单”模式，默认代理，仅国内站点直连：</p>
+        <div class="code-block"><pre>rules:
+  - DOMAIN-SUFFIX,cn,DIRECT
+  - DOMAIN-KEYWORD,alipay,DIRECT
+  - GEOIP,CN,DIRECT
+  - MATCH,PROXY</pre></div>
+        <p>注意：<code>GEOIP,CN,DIRECT</code> 会将所有服务器位于中国的 IP 直连，省去大量域名规则。</p>
+        
+        <h3>场景二：屏蔽广告和跟踪器</h3>
+        <p>利用 <code>REJECT</code> 策略组直接丢弃广告请求，提升体验：</p>
+        <div class="code-block"><pre>rules:
+  - DOMAIN-KEYWORD,ad,REJECT
+  - DOMAIN-SUFFIX,doubleclick.net,REJECT
+  - DOMAIN-SUFFIX,googlesyndication.com,REJECT
+  - MATCH,PROXY</pre></div>
+        
+        <h3>场景三：多节点负载均衡</h3>
+        <p>将视频流量指向 <code>url-test</code> 策略组，自动选择最快的节点：</p>
+        <div class="code-block"><pre>proxy-groups:
+  - name: Video
+    type: url-test
+    proxies: [Node1, Node2, Node3]
+    url: 'http://www.gstatic.com/generate_204'
+    interval: 300
+
+rules:
+  - DOMAIN-SUFFIX,youtube.com,Video
+  - DOMAIN-SUFFIX,netflix.com,Video
+  - MATCH,PROXY</pre></div>
+        <p>更多策略组玩法，请参阅 <a href="proxy-group-guide.html">《Clash 策略组完全解析》</a>。</p>
+      </section>
+
+      <section id="priority">
+        <h2>📊 规则顺序与优先级</h2>
+        <p>规则匹配遵循“先到先得”的原则。请记住以下优先级口诀：</p>
+        <ul style="margin-left:1.5rem; line-height:2;">
+          <li><strong>REJECT 类规则最前：</strong> 尽早丢弃广告、跟踪流量，避免浪费资源。</li>
+          <li><strong>精确域名与 IP 规则居中：</strong> 特别重要的内部服务、需要固定代理的站点放在前面。</li>
+          <li><strong>GEOIP 规则靠后：</strong> 通常用于大面积直连，但如有特殊需要可以提前。</li>
+          <li><strong>MATCH 永远最后：</strong> 作为兜底规则。</li>
+        </ul>
+        <div class="warning-box">
+          ⚠️ <strong>常见错误：</strong> 把 <code>MATCH</code> 放在规则中间会导致后续规则完全不生效。请使用客户端的规则排序检查功能。
+        </div>
+      </section>
+
+      <section id="debugging">
+        <h2>🔍 调试与验证技巧</h2>
+        <h4>1. 开启日志查看命中情况</h4>
+        <p>在客户端设置中将日志级别调整为 <code>debug</code>，可以看到每条请求匹配了哪条规则。这对于排查“为什么这个网站走了代理/直连”非常有效。</p>
+        <h4>2. 使用外部工具验证</h4>
+        <p>浏览器访问 <code>ipinfo.io</code> 可查看当前出口 IP；使用 <code>nslookup</code> 或在线 DNS 泄漏测试工具确认 DNS 是否泄漏。</p>
+        <h4>3. 临时切换模式</h4>
+        <p>怀疑规则问题时，可将客户端模式临时切换为“全局”，若网络恢复正常，说明规则未正确命中该站点。此时再去调优规则。</p>
+        <p>若问题依旧存在，可能是代理节点本身不稳定，可参考 <a href="subscription-troubleshoot.html">订阅排查手册</a> 或 <a href="../faq.html">常见问题</a>。</p>
+      </section>
+
+      <section id="best-practices">
+        <h2>🏆 最佳实践总结</h2>
+        <ul style="margin-left:1.5rem; line-height:2;">
+          <li>优先使用社区维护的规则集（如 <a href="https://github.com/Loyalsoldier/clash-rules" target="_blank">Loyalsoldier/clash-rules</a>），它们每日更新，省去大量手动维护工作。</li>
+          <li>自定义规则应尽量精简，过多规则会影响匹配性能。</li>
+          <li>利用 <code>DOMAIN-SUFFIX</code> 替代多个 <code>DOMAIN</code>，减少冗余。</li>
+          <li>定期查看客户端日志，清理无效规则。</li>
+          <li>将策略组命名规范化，方便在规则中引用。</li>
+        </ul>
+        <p>掌握了这些技巧后，你的 Clash 分流将会既高效又稳定。如果想进一步提升网络性能，强烈建议阅读 <a href="tun-optimization.html">《TUN 模式原理与优化指南》</a>，将规则与 TUN 模式结合，实现真正的全局无死角代理。</p>
+      </section>
+    </article>
+
+    <section>
+      <h2>📚 继续探索</h2>
+      <div class="related-grid">
+        <a href="tun-optimization.html" class="related-card">
+          <strong>🚀 TUN 模式原理与优化</strong>
+          <p>全局代理无死角，同时避免虚拟网卡冲突。</p>
+        </a>
+        <a href="proxy-group-guide.html" class="related-card">
+          <strong>📖 策略组完全解析</strong>
+          <p>灵活调度节点，自动选择低延迟线路。</p>
+        </a>
+        <a href="subscription-troubleshoot.html" class="related-card">
+          <strong>🔧 订阅失败排查手册</strong>
+          <p>彻底修复订阅更新中的各类疑难杂症。</p>
+        </a>
+        <a href="../index.html" class="related-card">
+          <strong>🏠 返回首页</strong>
+          <p>获取最新版客户端与更多实用资源。</p>
+        </a>
+      </div>
+    </section>
+  </div>
+
+  <footer>
+    <p>© 2026 Clash 下载站 · 基于开源项目 Clash 构建 · <a href="https://clashforwinodws.github.io/Clash-for-Winodows/">clashforwinodws.github.io</a></p>
+    <p style="margin-top:0.4rem;">本站仅提供客户端下载与使用教程，不提供任何代理服务。</p>
+  </footer>
+
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Article",
+      "headline": "如何编写高效的自定义代理规则",
+      "author": {
+        "@type": "Organization",
+        "name": "Clashforwindows"
+      },
+      "datePublished": "2026-07-07",
+      "description": "本文深入讲解 Clash 规则系统的匹配类型与实战案例，助你编写出更高效、更稳定的自定义代理规则。",
+      "image": "https://clashforwinodws.github.io/Clash-for-Winodows/favicon.ico",
+      "publisher": {
+        "@type": "Organization",
+        "name": "Clashforwindows",
+        "logo": {
+          "@type": "ImageObject",
+          "url": "https://clashforwinodws.github.io/Clash-for-Winodows/favicon.ico"
+        }
+      }
+    }
+  </script>
+</body>
+</html>
