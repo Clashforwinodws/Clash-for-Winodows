@@ -1,5 +1,5 @@
 # 最新版Clash for Windows客户端下载
-[下载Windows客户端 v0.20.39](https://github.com/Clashforwinodws/Clash-for-Winodows/releases)
+[下载Windows客户端 v0.20.40](https://github.com/Clashforwinodws/Clash-for-Winodows/releases/tag/v0.20.40)
 
 # Clash for Windows - Windows平台代理客户端
 ## Clash for Windows 是什么？
