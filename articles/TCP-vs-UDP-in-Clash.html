@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>Clash 中的 TCP 与 UDP：协议差异、代理模式与性能调优 | 深度技术解析</title>
+  
+  <!-- SEO：针对 Clash 中 TCP/UDP 处理差异的深度技术文章，突出原理、模式、场景优化 -->
+  <meta name="description" content="深入解析 Clash 代理环境下 TCP 与 UDP 协议的行为差异，涵盖 TUN、TPROXY、REDIRECT 等透明代理模式的原理，以及游戏加速、DNS 优化、流媒体分流的最佳实践。让每一个数据包都走对路线。">
+  <meta name="keywords" content="Clash TCP UDP, Clash TUN 模式 TCP UDP, TPROXY, REDIRECT, 游戏 UDP 代理, Clash DNS 优化, 透明代理, Clash 协议栈, 代理规则引擎">
+  <meta name="author" content="Clashforwindows">
+  
+  <link rel="icon" type="image/x-icon" href="../favicon.ico">
+  <link rel="shortcut icon" type="image/x-icon" href="../favicon.ico">
+  <link rel="canonical" href="https://clashforwinodws.github.io/Clash-for-Winodows/articles/TCP-vs-UDP-in-Clash.html">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <style>
+    :root {
+      --primary: #1e6f9f;
+      --primary-dark: #145a7a;
+      --bg: #ffffff;
+      --surface: #f8fafc;
+      --border: #e2e8f0;
+      --text: #1e293b;
+      --text-secondary: #475569;
+      --accent: #f59e0b;
+      --radius: 12px;
+    }
+
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: var(--bg); color: var(--text); line-height:1.6;
+      display:flex; flex-direction:column; min-height:100vh;
+    }
+
+    .navbar {
+      background: rgba(255,255,255,0.9); border-bottom:1px solid var(--border);
+      padding:0.8rem 1.5rem; display:flex; flex-wrap:wrap; align-items:center;
+      justify-content:space-between; gap:1rem; position:sticky; top:0; z-index:50;
+      backdrop-filter: blur(12px);
+    }
+    .nav-logo {
+      font-weight:700; font-size:1.3rem; color:var(--primary-dark);
+      text-decoration:none; display:flex; align-items:center; gap:0.3rem;
+    }
+    .nav-links { display:flex; flex-wrap:wrap; gap:1.8rem; list-style:none; }
+    .nav-links a {
+      text-decoration:none; color:var(--text-secondary); font-weight:500;
+      font-size:0.95rem; transition:color 0.2s; white-space:nowrap;
+    }
+    .nav-links a:hover { color:var(--primary); }
+
+    .container {
+      max-width:900px; margin:0 auto; padding:1.5rem 1.5rem 3rem; width:100%; flex:1;
+    }
+
+    .hero {
+      text-align:center; margin:2rem 0 2rem;
+    }
+    .hero h1 {
+      font-size:2.5rem; font-weight:800;
+      background: linear-gradient(135deg, #0f2b4b, #1e6f9f);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text; margin-bottom:0.75rem;
+    }
+    .hero p { font-size:1.1rem; color:var(--text-secondary); max-width:600px; margin:0 auto; }
+
+    .card {
+      background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+      padding:2rem 1.8rem; margin-bottom:2rem;
+      box-shadow:0 4px 12px rgba(0,0,0,0.02);
+    }
+    h2 {
+      font-size:1.8rem; margin:1.8rem 0 1rem; color:var(--primary-dark);
+      display:flex; align-items:center; gap:0.6rem;
+    }
+    h2:first-of-type { margin-top:0; }
+    h3 { font-size:1.3rem; margin:1.5rem 0 0.5rem; color:#334155; }
+    h4 { font-size:1.1rem; margin:1.2rem 0 0.4rem; color:#475569; }
+
+    .toc {
+      background:white; border:1px solid var(--border); border-radius:var(--radius);
+      padding:1.5rem; margin-bottom:2rem;
+    }
+    .toc ul { list-style:none; display:flex; flex-wrap:wrap; gap:0.8rem 2rem; }
+    .toc a { color:var(--primary); text-decoration:none; font-weight:500; }
+
+    .info-box {
+      background:#e6f0f8; border-left:4px solid var(--primary);
+      padding:1.2rem 1.5rem; border-radius:var(--radius); margin:1.5rem 0;
+    }
+    .warning-box {
+      background:#fff7ed; border-left:4px solid var(--accent);
+      padding:1.2rem 1.5rem; border-radius:var(--radius); margin:1.5rem 0;
+    }
+
+    .code-block {
+      background:#1e293b; color:#e2e8f0; padding:1.2rem; border-radius:var(--radius);
+      font-family: 'JetBrains Mono', monospace; font-size:0.9rem; overflow-x:auto;
+      margin:1rem 0; line-height:1.7;
+    }
+
+    .table-wrap {
+      overflow-x:auto; margin:1.5rem 0;
+    }
+    table {
+      width:100%; border-collapse:collapse; background:white; border-radius:var(--radius);
+      overflow:hidden; border:1px solid var(--border);
+    }
+    th, td {
+      padding:0.8rem 1rem; text-align:left; border-bottom:1px solid var(--border);
+      font-size:0.95rem;
+    }
+    th { background:var(--surface); font-weight:600; color:var(--primary-dark); }
+    tr:last-child td { border-bottom:none; }
+
+    .related-grid {
+      display:grid; grid-template-columns: repeat(auto-fit, minmax(200px,1fr));
+      gap:1.2rem; margin-top:1.5rem;
+    }
+    .related-card {
+      background:white; border:1px solid var(--border); border-radius:var(--radius);
+      padding:1.2rem; text-decoration:none; color:var(--text); transition:0.2s;
+    }
+    .related-card:hover { box-shadow:0 6px 16px rgba(0,0,0,0.04); }
+    .related-card strong { display:block; margin-bottom:0.4rem; color:var(--primary-dark); }
+    .related-card p { font-size:0.9rem; color:var(--text-secondary); }
+
+    footer {
+      background:var(--surface); border-top:1px solid var(--border);
+      text-align:center; padding:1.8rem; color:var(--text-secondary); font-size:0.9rem;
+      margin-top:auto;
+    }
+    footer a { color:var(--primary); text-decoration:none; }
+
+    @media (max-width:700px) {
+      .nav-links { gap:1rem; }
+    }
+  </style>
+</head>
+<body>
+  <nav class="navbar">
+    <a href="../" class="nav-logo">⚡ Clash Hub</a>
+    <ul class="nav-links">
+      <li><a href="../">首页</a></li>
+      <li><a href="../download.html">📥 下载中心</a></li>
+      <li><a href="../tutorial.html">📘 配置教程</a></li>
+      <li><a href="../faq.html">❓ 常见问题</a></li>
+      <li><a href="../changelog.html">📋 更新日志</a></li>
+      <li><a href="../about.html">💡 关于项目</a></li>
+    </ul>
+  </nav>
+
+  <div class="container">
+    <header class="hero">
+      <h1>Clash 中的 TCP 与 UDP：协议差异、代理模式与性能调优</h1>
+      <p>让每一个数据包都走对路线 — 从原理到实战</p>
+    </header>
+
+    <div style="display:flex; justify-content:center; gap:2rem; color:var(--text-secondary); font-size:0.9rem; margin-bottom:1.5rem;">
+      <span>📅 2026-07-09</span>
+      <span>🕒 阅读时间约 12 分钟</span>
+      <span>🏷️ <a href="index.html" style="color:var(--primary);">深度技术</a></span>
+    </div>
+
+    <div class="toc">
+      <strong>📑 本文目录</strong>
+      <ul style="margin-top:0.6rem;">
+        <li><a href="#tcp-udp-basics">TCP 与 UDP 协议基础</a></li>
+        <li><a href="#clash-tcp-udp">Clash 如何对待 TCP 和 UDP？</a></li>
+        <li><a href="#transparent-proxy">透明代理模式：REDIRECT、TPROXY、TUN</a></li>
+        <li><a href="#gaming">游戏场景：UDP 是关键</a></li>
+        <li><a href="#dns-optimization">DNS 优化：TCP 还是 UDP？</a></li>
+        <li><a href="#config-tips">实战配置与性能调优</a></li>
+        <li><a href="#troubleshooting">常见问题与排障</a></li>
+        <li><a href="#summary">总结与最佳实践</a></li>
+      </ul>
+    </div>
+
+    <article>
+      <section id="tcp-udp-basics">
+        <h2>📡 TCP 与 UDP 协议基础</h2>
+        <p>TCP（传输控制协议）和 UDP（用户数据报协议）是互联网传输层的两个核心协议。TCP 提供面向连接、可靠、按序到达的字节流服务，而 UDP 提供无连接、不可靠但低开销的数据报服务。简单来说：TCP 像打电话，需要建立连接、确认信息；UDP 像发信件，直接发送，不管对方是否收到。</p>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>特性</th><th>TCP</th><th>UDP</th></tr></thead>
+            <tbody>
+              <tr><td>连接方式</td><td>面向连接（三次握手）</td><td>无连接</td></tr>
+              <tr><td>可靠性</td><td>确认重传、流量控制</td><td>不保证送达</td></tr>
+              <tr><td>顺序保证</td><td>有序传输</td><td>可能乱序</td></tr>
+              <tr><td>头部开销</td><td>20 字节</td><td>8 字节</td></tr>
+              <tr><td>典型应用</td><td>HTTP/HTTPS、FTP、SSH</td><td>DNS、视频通话、在线游戏</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>在代理环境中，这两个协议的处理方式差异巨大，直接影响性能和应用兼容性。</p>
+      </section>
+
+      <section id="clash-tcp-udp">
+        <h2>⚙️ Clash 如何对待 TCP 和 UDP？</h2>
+        <p>Clash 核心本身支持对 TCP 和 UDP 流量的分别控制。在配置文件中，你可以通过 <code>port</code>（HTTP/HTTPS 代理）和 <code>socks-port</code>（SOCKS5 代理）来监听 TCP 连接，而 UDP 支持则依赖于 SOCKS5 或透明代理模式。默认情况下，系统代理模式仅代理 TCP 流量（浏览器 HTTP 请求等），<strong>UDP 流量不会自动被代理</strong>，除非启用 TUN 或 TPROXY 等模式。</p>
+        <div class="info-box">
+          💡 <strong>关键点：</strong> 如果你只是设置了系统代理（如 Windows 的“代理”设置），那么只有支持代理协议的 TCP 应用会走 Clash，UDP 流量（如游戏、DNS 查询）依然直连本地网络。
+        </div>
+        <p>在规则层面，你可以为 TCP 和 UDP 使用不同的策略组。例如，让 DNS（通常走 UDP 53 端口）使用可靠的节点，而普通浏览使用延迟更低的节点。</p>
+      </section>
+
+      <section id="transparent-proxy">
+        <h2>🌐 透明代理模式：REDIRECT、TPROXY、TUN</h2>
+        <p>要想代理 UDP 流量，必须让 Clash 在网络层“接管”所有数据包。这需要用到透明代理技术，常见的有三种：</p>
+        <h3>REDIRECT（仅 TCP）</h3>
+        <p>REDIRECT 是 Linux 上最简单的透明代理方式，通过 iptables 将 TCP 连接重定向到 Clash 的端口。但它<strong>无法处理 UDP</strong>，因为 Linux 内核的 REDIRECT 模块不支持 UDP。</p>
+        <h3>TPROXY（支持 TCP + UDP）</h3>
+        <p>TPROXY 是更强大的透明代理技术，可以在不修改原始目标地址的情况下同时代理 TCP 和 UDP。它在 Linux 上需要内核支持，并且需要通过路由策略或 iptables 的 TPROXY 目标实现。Clash 配合 TPROXY 可以完美代理游戏、DNS 等 UDP 应用。</p>
+        <div class="code-block"><pre># 示例：使用 iptables 和 TPROXY 转发 UDP 流量给 Clash
+iptables -t mangle -A PREROUTING -p udp --dport 53 -j TPROXY --on-port 7892 --tproxy-mark 0x1/0x1</pre></div>
+        <h3>TUN 模式（跨平台，完整接管）</h3>
+        <p>TUN 模式创建虚拟网卡，将三层 IP 包完整交给 Clash 处理，自然支持 TCP 和 UDP。在 Clash Verge Rev 等客户端中，开启 TUN 模式即可一键代理所有流量，包括 UDP。这是目前最通用、最省心的方案，但需要处理虚拟网卡的路由配置。</p>
+        <p>详细 TUN 设置与优化请参阅 <a href="tun-optimization.html">《TUN 模式原理与优化指南》</a>。</p>
+      </section>
+
+      <section id="gaming">
+        <h2>🎮 游戏场景：UDP 是关键</h2>
+        <p>大多数网络游戏使用 UDP 协议来传输实时位置、射击判定等数据，因为低延迟比绝对可靠更重要。如果只代理了 TCP，游戏的 UDP 数据包将绕过代理，导致 <strong>高延迟、丢包，甚至无法连接服务器</strong>。</p>
+        <p><strong>解决方案：</strong></p>
+        <ul style="margin-left:1.5rem;">
+          <li>启用 TUN 模式（推荐），让所有流量包括 UDP 都经过 Clash。</li>
+          <li>在规则中为游戏服务器域名或 IP 段指定专门的 <code>url-test</code> 策略组，自动选择低延迟节点。</li>
+          <li>如果游戏使用特定端口，也可使用 <code>DST-PORT</code> 规则精确分流 UDP 流量。</li>
+        </ul>
+        <div class="code-block"><pre>rules:
+  - DOMAIN-SUFFIX,game.example.com,🎮游戏节点
+  - DST-PORT,27015-27030,🎮游戏节点  # Steam 游戏常用端口
+  - MATCH,PROXY</pre></div>
+        <p>相关策略组配置可参考 <a href="proxy-group-guide.html">《Clash 策略组完全解析》</a>。</p>
+      </section>
+
+      <section id="dns-optimization">
+        <h2>🔍 DNS 优化：TCP 还是 UDP？</h2>
+        <p>传统 DNS 查询使用 UDP 53 端口，但在代理环境下容易发生 <strong>DNS 泄漏</strong> 或污染。Clash 提供多种 DNS 工作模式：</p>
+        <ul style="margin-left:1.5rem;">
+          <li><strong>UDP 53 劫持：</strong> 在 TUN/TPROXY 模式下，将所有发往 53 端口的 UDP 包重定向到 Clash 内置 DNS 模块，确保使用加密上游（如 DOH/DOT）。</li>
+          <li><strong>Fake-IP：</strong> 返回一个虚拟 IP，后续连接由 Clash 根据域名规则处理，彻底杜绝 DNS 泄漏。但会消耗内存存储映射表。</li>
+          <li><strong>DNS-over-HTTPS (DOH) / DNS-over-TLS (DOT)：</strong> 使用 TCP 443 端口加密传输 DNS 查询，隐私性更好，但延迟略高。</li>
+        </ul>
+        <p>建议在 TUN 模式下开启 <code>fake-ip</code>，既避免 UDP DNS 泄漏，又能让规则基于域名高效匹配。具体配置可查阅 <a href="tun-optimization.html#dns-leak">TUN 模式文章中的 DNS 泄漏章节</a>。</p>
+      </section>
+
+      <section id="config-tips">
+        <h2>🛠️ 实战配置与性能调优</h2>
+        <h3>1. 分离 TCP 与 UDP 策略组</h3>
+        <p>有时我们希望 TCP 流量走低延迟节点，UDP 流量（如 DNS）走高可用节点，可以这样设置：</p>
+        <div class="code-block"><pre>proxy-groups:
+  - name: TCP默认
+    type: url-test
+    proxies: [节点A, 节点B, 节点C]
+    url: 'http://www.gstatic.com/generate_204'
+    interval: 300
+  - name: UDP默认
+    type: fallback
+    proxies: [节点A, 节点B, 节点C]
+    url: 'http://www.gstatic.com/generate_204'
+    interval: 300
+
+rules:
+  - AND,((PROTOCOL,UDP),(NOT,((DST-PORT,53)))),UDP默认
+  - MATCH,TCP默认</pre></div>
+        <p>上述规则借助 Clash Meta 的 <code>AND</code> 逻辑，将除 DNS 外的 UDP 流量单独分流。</p>
+        <h3>2. 调整 TUN 协议栈</h3>
+        <p>在 Linux 上，TUN 可以配置为 <code>system</code> 或 <code>gvisor</code>。system 模式性能更好，但对 UDP 的兼容性依赖内核版本。如果 UDP 丢包严重，可尝试切换为 gvisor 以获得更一致的网络栈行为。</p>
+        <h3>3. 开启 UDP 超时清理</h3>
+        <p>长时间运行的 UDP 连接（如游戏）可能积累大量会话，占用内存。在客户端中调整 UDP 空闲超时，及时释放无效连接。</p>
+      </section>
+
+      <section id="troubleshooting">
+        <h2>🔧 常见问题与排障</h2>
+        <div class="warning-box">
+          <strong>🛑 UDP 流量完全没有走代理？</strong> 检查是否启用了 TUN 或 TPROXY 模式。系统代理仅代理 TCP。
+        </div>
+        <div class="warning-box">
+          <strong>🛑 游戏延迟很高但测速正常？</strong> 可能游戏使用的是 UDP，而你的策略组对 UDP 使用了高延迟节点。确认规则中 UDP 流量匹配到了正确的策略组。
+        </div>
+        <div class="warning-box">
+          <strong>🛑 DNS 解析慢或失败？</strong> 可能是 UDP 53 劫持未生效，DNS 请求直连了本地 ISP。请检查 TUN 配置中的 <code>dns-hijack</code> 参数，或改用 fake-ip 模式。
+        </div>
+        <p>更多网络层面的问题排查，请参考 <a href="subscription-troubleshoot.html">《订阅排障手册》</a> 和 <a href="../faq.html">常见问题页面</a>。</p>
+      </section>
+
+      <section id="summary">
+        <h2>📌 总结与最佳实践</h2>
+        <ul style="margin-left:1.5rem; line-height:2;">
+          <li>TCP 和 UDP 需要不同的代理处理方式，<strong>开启 TUN 模式是代理 UDP 的最简单方案</strong>。</li>
+          <li>游戏、VoIP、流媒体等实时应用强烈依赖 UDP，务必确保其被代理并选择低延迟节点。</li>
+          <li>利用 Clash Meta 的 <code>PROTOCOL</code> 匹配器，可以为 TCP 和 UDP 指定不同策略。</li>
+          <li>DNS 使用 DOH/DOT（基于 TCP）或 Fake-IP 模式可以兼顾安全与性能。</li>
+          <li>定期检查客户端日志中关于 UDP 超时或错误的信息，优化缓存与超时设置。</li>
+        </ul>
+        <p>深入理解 TCP/UDP 在代理中的行为后，配合 <a href="custom-rules.html">精细的规则编写</a> 和 <a href="proxy-group-guide.html">智能策略组</a>，你可以打造一套完美适配游戏、影音与日常浏览的代理体系。</p>
+      </section>
+    </article>
+
+    <section>
+      <h2>📚 继续探索</h2>
+      <div class="related-grid">
+        <a href="tun-optimization.html" class="related-card">
+          <strong>🚀 TUN 模式原理与优化</strong>
+          <p>彻底解决虚拟网卡与 DNS 泄漏问题。</p>
+        </a>
+        <a href="custom-rules.html" class="related-card">
+          <strong>📝 自定义规则编写</strong>
+          <p>精确控制 TCP/UDP 流量的走向。</p>
+        </a>
+        <a href="proxy-group-guide.html" class="related-card">
+          <strong>📖 策略组完全解析</strong>
+          <p>自动选择低延迟节点与故障转移。</p>
+        </a>
+        <a href="../tutorial.html" class="related-card">
+          <strong>📘 配置教程总览</strong>
+          <p>从零开始搭建 Clash 配置。</p>
+        </a>
+      </div>
+    </section>
+  </div>
+
+  <footer>
+    <p>© 2026 Clash 下载站 · 基于开源项目 Clash 构建 · <a href="https://clashforwinodws.github.io/Clash-for-Winodows/">clashforwinodws.github.io</a></p>
+    <p style="margin-top:0.4rem;">本站仅提供客户端下载与使用教程，不提供任何代理服务。</p>
+  </footer>
+
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Article",
+      "headline": "Clash 中的 TCP 与 UDP：协议差异、代理模式与性能调优",
+      "author": {
+        "@type": "Organization",
+        "name": "Clashforwindows"
+      },
+      "datePublished": "2026-07-09",
+      "description": "深入解析 Clash 代理环境下 TCP 与 UDP 协议的行为差异，涵盖透明代理模式、游戏优化与 DNS 配置。",
+      "image": "https://clashforwinodws.github.io/Clash-for-Winodows/favicon.ico",
+      "publisher": {
+        "@type": "Organization",
+        "name": "Clashforwindows",
+        "logo": {
+          "@type": "ImageObject",
+          "url": "https://clashforwinodws.github.io/Clash-for-Winodows/favicon.ico"
+        }
+      }
+    }
+  </script>
+</body>
+</html>
