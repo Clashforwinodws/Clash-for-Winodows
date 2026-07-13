@@ -85,4 +85,16 @@
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
+       <url>
+    <loc>https://clashforwinodws.github.io/Clash-for-Winodows/articles/Windows-TUN-Driver-Deep-Dive.html</loc>
+    <lastmod>2026-07-13</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+         <url>
+    <loc>https://clashforwinodws.github.io/Clash-for-Winodows/articles/Managing-Large-Configurations.html</loc>
+    <lastmod>2026-07-13</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
 </urlset>
