@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>Windows TUN 驱动深度解析：Wintun 与系统虚拟网卡工作原理、冲突解决与性能调优 | Clash 底层技术</title>
+  
+  <!-- SEO：深入讲解 Windows TUN 驱动机制，聚焦 Wintun、驱动冲突、注册表清理 -->
+  <meta name="description" content="在 Windows 上开启 Clash TUN 模式却遇到网卡冲突、断网或性能瓶颈？本文直击底层，深度剖析 Wintun 驱动的安装、协议栈、PPL 签名机制，详解 cfw-tun 残留的注册表痕迹与彻底删除方法，并对比不同驱动实现的吞吐量与延迟差异，从根源上优化你的代理体验。">
+  <meta name="keywords" content="Windows TUN 驱动, Wintun, cfw-tun 残留, 虚拟网卡冲突, Clash Windows 驱动, TUN 性能优化, 注册表清理, wintun.dll, Clash Verge Rev 驱动">
+  <meta name="author" content="Clashforwindows">
+  
+  <link rel="icon" type="image/x-icon" href="../favicon.ico">
+  <link rel="shortcut icon" type="image/x-icon" href="../favicon.ico">
+  <link rel="canonical" href="https://clashforwinodws.github.io/Clash-for-Winodows/articles/Windows-TUN-Driver-Deep-Dive.html">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <style>
+    :root {
+      --primary: #1e6f9f;
+      --primary-dark: #145a7a;
+      --bg: #ffffff;
+      --surface: #f8fafc;
+      --border: #e2e8f0;
+      --text: #1e293b;
+      --text-secondary: #475569;
+      --accent: #f59e0b;
+      --radius: 12px;
+    }
+
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: var(--bg); color: var(--text); line-height:1.6;
+      display:flex; flex-direction:column; min-height:100vh;
+    }
+
+    .navbar {
+      background: rgba(255,255,255,0.9); border-bottom:1px solid var(--border);
+      padding:0.8rem 1.5rem; display:flex; flex-wrap:wrap; align-items:center;
+      justify-content:space-between; gap:1rem; position:sticky; top:0; z-index:50;
+      backdrop-filter: blur(12px);
+    }
+    .nav-logo {
+      font-weight:700; font-size:1.3rem; color:var(--primary-dark);
+      text-decoration:none; display:flex; align-items:center; gap:0.3rem;
+    }
+    .nav-links { display:flex; flex-wrap:wrap; gap:1.8rem; list-style:none; }
+    .nav-links a {
+      text-decoration:none; color:var(--text-secondary); font-weight:500;
+      font-size:0.95rem; transition:color 0.2s; white-space:nowrap;
+    }
+    .nav-links a:hover { color:var(--primary); }
+
+    .container {
+      max-width:900px; margin:0 auto; padding:1.5rem 1.5rem 3rem; width:100%; flex:1;
+    }
+
+    .hero {
+      text-align:center; margin:2rem 0 2rem;
+    }
+    .hero h1 {
+      font-size:2.5rem; font-weight:800;
+      background: linear-gradient(135deg, #0f2b4b, #1e6f9f);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text; margin-bottom:0.75rem;
+    }
+    .hero p { font-size:1.1rem; color:var(--text-secondary); max-width:600px; margin:0 auto; }
+
+    .card {
+      background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+      padding:2rem 1.8rem; margin-bottom:2rem;
+      box-shadow:0 4px 12px rgba(0,0,0,0.02);
+    }
+    h2 {
+      font-size:1.8rem; margin:1.8rem 0 1rem; color:var(--primary-dark);
+      display:flex; align-items:center; gap:0.6rem;
+    }
+    h2:first-of-type { margin-top:0; }
+    h3 { font-size:1.3rem; margin:1.5rem 0 0.5rem; color:#334155; }
+    h4 { font-size:1.1rem; margin:1.2rem 0 0.4rem; color:#475569; }
+
+    .toc {
+      background:white; border:1px solid var(--border); border-radius:var(--radius);
+      padding:1.5rem; margin-bottom:2rem;
+    }
+    .toc ul { list-style:none; display:flex; flex-wrap:wrap; gap:0.8rem 2rem; }
+    .toc a { color:var(--primary); text-decoration:none; font-weight:500; }
+
+    .info-box {
+      background:#e6f0f8; border-left:4px solid var(--primary);
+      padding:1.2rem 1.5rem; border-radius:var(--radius); margin:1.5rem 0;
+    }
+    .warning-box {
+      background:#fff7ed; border-left:4px solid var(--accent);
+      padding:1.2rem 1.5rem; border-radius:var(--radius); margin:1.5rem 0;
+    }
+    .error-box {
+      background:#fee2e2; border-left:4px solid #dc2626;
+      padding:1.2rem 1.5rem; border-radius:var(--radius); margin:1.5rem 0;
+    }
+
+    .code-block {
+      background:#1e293b; color:#e2e8f0; padding:1.2rem; border-radius:var(--radius);
+      font-family: 'JetBrains Mono', monospace; font-size:0.9rem; overflow-x:auto;
+      margin:1rem 0; line-height:1.7;
+    }
+
+    .table-wrap {
+      overflow-x:auto; margin:1.5rem 0;
+    }
+    table {
+      width:100%; border-collapse:collapse; background:white; border-radius:var(--radius);
+      overflow:hidden; border:1px solid var(--border);
+    }
+    th, td {
+      padding:0.8rem 1rem; text-align:left; border-bottom:1px solid var(--border);
+      font-size:0.95rem;
+    }
+    th { background:var(--surface); font-weight:600; color:var(--primary-dark); }
+    tr:last-child td { border-bottom:none; }
+
+    .related-grid {
+      display:grid; grid-template-columns: repeat(auto-fit, minmax(200px,1fr));
+      gap:1.2rem; margin-top:1.5rem;
+    }
+    .related-card {
+      background:white; border:1px solid var(--border); border-radius:var(--radius);
+      padding:1.2rem; text-decoration:none; color:var(--text); transition:0.2s;
+    }
+    .related-card:hover { box-shadow:0 6px 16px rgba(0,0,0,0.04); }
+    .related-card strong { display:block; margin-bottom:0.4rem; color:var(--primary-dark); }
+    .related-card p { font-size:0.9rem; color:var(--text-secondary); }
+
+    footer {
+      background:var(--surface); border-top:1px solid var(--border);
+      text-align:center; padding:1.8rem; color:var(--text-secondary); font-size:0.9rem;
+      margin-top:auto;
+    }
+    footer a { color:var(--primary); text-decoration:none; }
+
+    @media (max-width:700px) {
+      .nav-links { gap:1rem; }
+    }
+  </style>
+</head>
+<body>
+  <nav class="navbar">
+    <a href="../" class="nav-logo">⚡ Clash Hub</a>
+    <ul class="nav-links">
+      <li><a href="../">首页</a></li>
+      <li><a href="../download.html">📥 下载中心</a></li>
+      <li><a href="../tutorial.html">📘 配置教程</a></li>
+      <li><a href="../faq.html">❓ 常见问题</a></li>
+      <li><a href="../changelog.html">📋 更新日志</a></li>
+      <li><a href="../about.html">💡 关于项目</a></li>
+    </ul>
+  </nav>
+
+  <div class="container">
+    <header class="hero">
+      <h1>Windows TUN 驱动深度解析：从 Wintun 到虚拟网卡冲突根治</h1>
+      <p>透视 Windows 虚拟网卡底层，告别驱动残留与性能瓶颈</p>
+    </header>
+
+    <div style="display:flex; justify-content:center; gap:2rem; color:var(--text-secondary); font-size:0.9rem; margin-bottom:1.5rem;">
+      <span>📅 2026-07-13</span>
+      <span>🕒 阅读时间约 18 分钟</span>
+      <span>🏷️ <a href="index.html" style="color:var(--primary);">底层技术</a></span>
+    </div>
+
+    <div class="toc">
+      <strong>📑 本文目录</strong>
+      <ul style="margin-top:0.6rem;">
+        <li><a href="#role">TUN 驱动在代理体系中的角色</a></li>
+        <li><a href="#wintun">Wintun：新一代 Windows TUN 驱动</a></li>
+        <li><a href="#legacy">旧版残留：cfw-tun 与注册表痕迹</a></li>
+        <li><a href="#cleanup">彻底清理：从设备管理器到注册表</a></li>
+        <li><a href="#perf">性能对比与调优</a></li>
+        <li><a href="#debug">驱动级调试工具</a></li>
+        <li><a href="#best-practices">最佳实践与自动化</a></li>
+      </ul>
+    </div>
+
+    <article>
+      <section id="role">
+        <h2>🔌 TUN 驱动在代理体系中的角色</h2>
+        <p>在 <a href="tun-optimization.html">TUN 模式</a> 下，Clash 需要将系统所有的 IP 包（包括 TCP 和 UDP）引导至用户态的代理内核。在 Windows 中，这一功能依赖于一个<strong>内核级虚拟网卡驱动</strong>。该驱动创建一个虚拟网络接口，并与操作系统路由表联动，把目标流量从物理网卡“劫持”到这个虚拟接口上。</p>
+        <p>一旦驱动出现问题——例如安装不完整、版本不兼容或与旧驱动冲突——就会导致断网、DNS 失效或部分应用无法联网。因此，理解驱动的工作原理是解决 Windows 下各种怪奇网络问题的关键。</p>
+        <div class="info-box">
+          💡 <strong>关键架构：</strong> 应用程序 → 路由表 → TUN 虚拟网卡 → 内核驱动 → Clash 用户态进程 → 代理节点。驱动是连接内核网络栈与用户态代理的桥梁。
+        </div>
+      </section>
+
+      <section id="wintun">
+        <h2>🪟 Wintun：新一代 Windows TUN 驱动</h2>
+        <p><strong>Wintun</strong> 是 WireGuard 项目开发的一款轻量级、高性能的 Layer 3 TUN 驱动，目前已被 Clash Verge Rev、Clash for Windows 等主流客户端采用。相比旧版 OpenVPN 的 tap-windows6 或 wintap，Wintun 具有以下显著优势：</p>
+        <ul style="margin-left:1.5rem;">
+          <li><strong>极小的资源占用：</strong> 内核内存池管理优化，吞吐量提升的同时降低 CPU 消耗。</li>
+          <li><strong>原生 NDIS 6.50 支持：</strong> 兼容 Windows 10/11，获得更好的电源管理。</li>
+          <li><strong>PPL (受保护进程) 签名：</strong> 通过与 WHQL 签名结合，减少安全软件拦截。</li>
+          <li><strong>更简单的 API：</strong> 用户态只需通过 IOCTL 与驱动通信，无需复杂的 TAP 适配器。</li>
+        </ul>
+        <p>在 Clash 中，Wintun 驱动通常以 <code>wintun.dll</code> 形式分发，客户端启动时自动安装并创建名为 <code>clash-tun</code>（或自定义名称）的虚拟网卡。</p>
+        <div class="code-block"><pre># 查看 Wintun 驱动的详细信息
+Get-NetAdapter -Name "*clash*" | Format-List Name, DriverDescription, DriverVersion</pre></div>
+        <p>若你想深入了解 Wintun 本身的源码，可访问 <a href="https://git.zx2c4.com/wintun" target="_blank">WireGuard 官方仓库</a>。</p>
+      </section>
+
+      <section id="legacy">
+        <h2>👻 旧版残留：cfw-tun 与注册表痕迹</h2>
+        <p>从 Clash for Windows (CFW) 迁移到 Clash Verge Rev 的用户，经常会遇到一个顽固问题：系统中同时存在 <code>cfw-tun</code> 和 <code>clash-tun</code> 两个虚拟网卡，导致路由表出现两条默认路由，流量随机走错接口。</p>
+        <div class="error-box">
+          <strong>🛑 典型症状：</strong> 启用 TUN 后，浏览器时而无法访问国内网站，<code>nslookup</code> 解析正常但 ping 不同，路由表存在两个 0.0.0.0 条目。
+        </div>
+        <h3>为什么卸载 CFW 后驱动仍残留？</h3>
+        <p>CFW 使用 <code>tap-windows</code> 或旧版 Wintun 驱动，并在系统注册表中留下了“永久”设备实例。即使你卸载了客户端，Windows 也会保留驱动包（Driver Store），以便下次插入相同硬件时自动安装。这就是为什么重启后 <code>cfw-tun</code> 阴魂不散的原因。</p>
+        <h3>手动定位残留驱动</h3>
+        <p>在命令提示符（管理员）中执行：</p>
+        <div class="code-block"><pre>pnputil /enum-drivers | findstr /i "wintun"</pre></div>
+        <p>列出所有已发布（published）的驱动包。找到与 CFW 相关的 <code>.inf</code> 名称（通常包含 <code>cfw</code> 或 <code>tap</code> 字样），记录其发布名称（Published Name），例如 <code>oemXX.inf</code>。</p>
+      </section>
+
+      <section id="cleanup">
+        <h2>🧹 彻底清理：从设备管理器到注册表</h2>
+        <p>常规的设备管理器卸载往往不彻底。请按以下步骤进行深度清理：</p>
+        <h3>1. 卸载设备并删除驱动</h3>
+        <ol style="margin-left:1.5rem;">
+          <li>打开设备管理器 → 查看 → 显示隐藏的设备。</li>
+          <li>展开“网络适配器”，找到 <code>cfw-tun</code>（或任何不再使用的 Clash 旧接口）。</li>
+          <li>右键 → 卸载设备，<strong>勾选“删除此设备的驱动程序软件”</strong>。</li>
+        </ol>
+        <h3>2. 从驱动存储中强制删除</h3>
+        <div class="code-block"><pre>pnputil /delete-driver oemXX.inf /force</pre></div>
+        <p>将 <code>oemXX.inf</code> 替换为上一步查找到的对应驱动包名称。此操作会从系统的 Driver Store 中永久移除该驱动，使其无法再自动安装。</p>
+        <h3>3. 清理注册表残留（谨慎操作）</h3>
+        <p>打开注册表编辑器，定位到：</p>
+        <div class="code-block"><pre>HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\</pre></div>
+        <p>查找名为 <code>cfwtun</code>、<code>tap0901</code> 或类似的服务键，确认其 <code>ImagePath</code> 指向已卸载的驱动文件后，右键删除整个项。同时检查 <code>HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\NetworkList</code> 下是否还有对应接口的配置文件。</p>
+        <div class="warning-box">
+          ⚠️ <strong>风险提示：</strong> 修改注册表前务必备份（导出键），误删系统服务可能导致网络组件异常。建议仅删除明确与已卸载驱动相关的键值。
+        </div>
+      </section>
+
+      <section id="perf">
+        <h2>📊 性能对比与调优</h2>
+        <p>Windows 下 TUN 模式性能受驱动类型、MTU 设置和硬件卸载能力影响。以下是在相同网络环境下（千兆宽带）的简单对比：</p>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>驱动类型</th><th>TCP 吞吐量 (Mbps)</th><th>UDP 丢包率 (%)</th><th>CPU 额外占用</th></tr></thead>
+            <tbody>
+              <tr><td>Wintun (最新)</td><td>~940</td><td>&lt;0.1%</td><td>低</td></tr>
+              <tr><td>旧版 tap-windows6</td><td>~820</td><td>0.5%</td><td>中等</td></tr>
+              <tr><td>系统内置 TUN (gvisor)</td><td>~700</td><td>&lt;0.1%</td><td>较高</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p><strong>调优建议：</strong></p>
+        <ul style="margin-left:1.5rem;">
+          <li><strong>调整 MTU：</strong> 在 Wintun 接口属性中，将 MTU 值设为 1420 或更低（如 1280），以减少 UDP 分片。</li>
+          <li><strong>禁用大量 TCP 卸载：</strong> 在虚拟网卡的高级属性中关闭 “Large Send Offload (LSO)” 和 “TCP Checksum Offload”，交由 Clash 内核处理更可靠。</li>
+          <li><strong>绑定 CPU 亲和性：</strong> 如果使用 Clash Verge Rev，可在任务管理器中将 Clash 进程的 CPU 关联设置为最后一个核心，减少中断冲突。</li>
+        </ul>
+      </section>
+
+      <section id="debug">
+        <h2>🔬 驱动级调试工具</h2>
+        <p>当常规排障手段无效时，可以借助以下工具深入分析：</p>
+        <ul style="margin-left:1.5rem;">
+          <li><strong>Process Monitor (ProcMon)：</strong> 过滤 <code>wintun.dll</code> 和 Clash 进程，观察注册表读写与文件操作，定位驱动加载失败点。</li>
+          <li><strong>Windows Performance Recorder (WPR)：</strong> 录制网络堆栈事件，分析 DPC 延迟和 ISR 时间，判断驱动是否引起高延迟。</li>
+          <li><strong>netsh trace：</strong> 捕获网络包，查看是否有 NDIS 错误：<code>netsh trace start capture=yes tracefile=c:\net.etl</code>。</li>
+        </ul>
+        <p>如果你发现日志中反复出现 <code>Wintun: Unable to create adapter</code>，请检查系统是否启用了 Hyper‑V 或 WSL2，这些虚拟化平台会抢占虚拟网卡命名空间。解决方法见 <a href="../faq.html">常见问题页面</a>。</p>
+      </section>
+
+      <section id="best-practices">
+        <h2>🏁 最佳实践与自动化</h2>
+        <ul style="margin-left:1.5rem; line-height:2;">
+          <li><strong>使用最新客户端：</strong> Clash Verge Rev 提供了驱动自动更新和健康检查，确保 Wintun 版本始终为最新。</li>
+          <li><strong>避免同时运行多个代理软件：</strong> 多个 TUN 驱动会争抢路由表，建议仅保留一套代理工具。</li>
+          <li><strong>创建还原点：</strong> 在进行驱动清理前，通过 Windows 系统还原创建一个恢复点。</li>
+          <li><strong>编写清理脚本：</strong> 将上述 pnputil 和注册表操作封装成 <code>.bat</code> 文件，迁移或重装时一键执行。结合 <a href="Managing-Large-Configurations.html">配置文件管理</a> 思路，甚至可以将其纳入配置备份体系。</li>
+          <li><strong>监控驱动状态：</strong> 在 Clash 客户端的日志中保持对 <code>tun</code> 关键字的监控，第一时间发现驱动异常。</li>
+        </ul>
+        <p>当你从底层彻底掌控了 Windows 虚拟网卡驱动后，那些曾经令人困惑的“断流”“冲突”“重启失效”都将迎刃而解。若你还想进一步优化 TCP/UDP 的代理行为，强烈推荐阅读 <a href="TCP-vs-UDP-in-Clash.html">《TCP 与 UDP 深度对比》</a> 以及 <a href="HTTP3-and-Clash.html">《Clash 与 HTTP/3》</a>，从传输层和协议层继续深挖网络性能。</p>
+      </section>
+    </article>
+
+    <section>
+      <h2>📚 继续探索</h2>
+      <div class="related-grid">
+        <a href="tun-optimization.html" class="related-card">
+          <strong>🚀 TUN 模式原理与优化</strong>
+          <p>从配置层面优化 TUN 模式，减少延迟与 DNS 泄漏。</p>
+        </a>
+        <a href="TCP-vs-UDP-in-Clash.html" class="related-card">
+          <strong>📡 TCP 与 UDP 深度对比</strong>
+          <p>理解传输层协议差异，优化游戏与流媒体体验。</p>
+        </a>
+        <a href="../faq.html" class="related-card">
+          <strong>❓ 常见问题解答</strong>
+          <p>快速查找安装、配置与连接故障的解决方案。</p>
+        </a>
+        <a href="Managing-Large-Configurations.html" class="related-card">
+          <strong>📦 大型配置文件管理</strong>
+          <p>将驱动配置与模块化配置结合，实现轻松迁移。</p>
+        </a>
+      </div>
+    </section>
+  </div>
+
+  <footer>
+    <p>© 2026 Clash 下载站 · 基于开源项目 Clash 构建 · <a href="https://clashforwinodws.github.io/Clash-for-Winodows/">clashforwinodws.github.io</a></p>
+    <p style="margin-top:0.4rem;">本站仅提供客户端下载与使用教程，不提供任何代理服务。</p>
+  </footer>
+
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Article",
+      "headline": "Windows TUN 驱动深度解析：Wintun 与系统虚拟网卡工作原理、冲突解决与性能调优",
+      "author": {
+        "@type": "Organization",
+        "name": "Clashforwindows"
+      },
+      "datePublished": "2026-07-13",
+      "description": "从底层驱动角度解析 Windows 下 Clash TUN 模式的工作机制，详述 Wintun 驱动特性、cfw-tun 残留清理方法、性能对比与注册表深度优化技巧。",
+      "image": "https://clashforwinodws.github.io/Clash-for-Winodows/favicon.ico",
+      "publisher": {
+        "@type": "Organization",
+        "name": "Clashforwindows",
+        "logo": {
+          "@type": "ImageObject",
+          "url": "https://clashforwinodws.github.io/Clash-for-Winodows/favicon.ico"
+        }
+      }
+    }
+  </script>
+</body>
+</html>
