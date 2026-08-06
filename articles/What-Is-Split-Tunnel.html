@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>Clash 拆分隧道（Split Tunnel）完全指南：让代理与直连各行其道 | 高级分流技术</title>
+  
+  <!-- SEO：聚焦拆分隧道原理、配置、与全局代理的对比，突出按进程/网段精准绕过 -->
+  <meta name="description" content="拆分隧道让指定应用或目标 IP 绕过 TUN 虚拟网卡直连，同时其他流量走代理。本文详解 Split Tunnel 在 Clash 中的实现原理，包括进程匹配、路由表排除、多网段配置，并对比全局代理、自定义规则的差异，提供游戏加速、办公内网等场景的实战方案，帮你榨干网络性能。">
+  <meta name="keywords" content="Clash 拆分隧道, Split Tunnel, TUN 模式绕过, 进程代理排除, 路由表策略, 应用分流, 内网直连, Clash 高级配置, 绕过代理, 全局代理对比">
+  <meta name="author" content="Clashforwindows">
+  
+  <link rel="icon" type="image/x-icon" href="../favicon.ico">
+  <link rel="shortcut icon" type="image/x-icon" href="../favicon.ico">
+  <link rel="canonical" href="https://clashforwinodws.github.io/Clash-for-Winodows/articles/What-Is-Split-Tunnel.html">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <style>
+    :root {
+      --primary: #1e6f9f;
+      --primary-dark: #145a7a;
+      --bg: #ffffff;
+      --surface: #f8fafc;
+      --border: #e2e8f0;
+      --text: #1e293b;
+      --text-secondary: #475569;
+      --accent: #f59e0b;
+      --radius: 12px;
+    }
+
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: var(--bg); color: var(--text); line-height:1.6;
+      display:flex; flex-direction:column; min-height:100vh;
+    }
+
+    .navbar {
+      background: rgba(255,255,255,0.9); border-bottom:1px solid var(--border);
+      padding:0.8rem 1.5rem; display:flex; flex-wrap:wrap; align-items:center;
+      justify-content:space-between; gap:1rem; position:sticky; top:0; z-index:50;
+      backdrop-filter: blur(12px);
+    }
+    .nav-logo {
+      font-weight:700; font-size:1.3rem; color:var(--primary-dark);
+      text-decoration:none; display:flex; align-items:center; gap:0.3rem;
+    }
+    .nav-links { display:flex; flex-wrap:wrap; gap:1.8rem; list-style:none; }
+    .nav-links a {
+      text-decoration:none; color:var(--text-secondary); font-weight:500;
+      font-size:0.95rem; transition:color 0.2s; white-space:nowrap;
+    }
+    .nav-links a:hover { color:var(--primary); }
+
+    .container {
+      max-width:900px; margin:0 auto; padding:1.5rem 1.5rem 3rem; width:100%; flex:1;
+    }
+
+    .hero {
+      text-align:center; margin:2rem 0 2rem;
+    }
+    .hero h1 {
+      font-size:2.5rem; font-weight:800;
+      background: linear-gradient(135deg, #0f2b4b, #1e6f9f);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text; margin-bottom:0.75rem;
+    }
+    .hero p { font-size:1.1rem; color:var(--text-secondary); max-width:650px; margin:0 auto; }
+
+    .card {
+      background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+      padding:2rem 1.8rem; margin-bottom:2rem;
+      box-shadow:0 4px 12px rgba(0,0,0,0.02);
+    }
+    h2 {
+      font-size:1.8rem; margin:1.8rem 0 1rem; color:var(--primary-dark);
+      display:flex; align-items:center; gap:0.6rem;
+    }
+    h2:first-of-type { margin-top:0; }
+    h3 { font-size:1.3rem; margin:1.5rem 0 0.5rem; color:#334155; }
+    h4 { font-size:1.1rem; margin:1.2rem 0 0.4rem; color:#475569; }
+
+    .toc {
+      background:white; border:1px solid var(--border); border-radius:var(--radius);
+      padding:1.5rem; margin-bottom:2rem;
+    }
+    .toc ul { list-style:none; display:flex; flex-wrap:wrap; gap:0.8rem 2rem; }
+    .toc a { color:var(--primary); text-decoration:none; font-weight:500; }
+
+    .info-box {
+      background:#e6f0f8; border-left:4px solid var(--primary);
+      padding:1.2rem 1.5rem; border-radius:var(--radius); margin:1.5rem 0;
+    }
+    .warning-box {
+      background:#fff7ed; border-left:4px solid var(--accent);
+      padding:1.2rem 1.5rem; border-radius:var(--radius); margin:1.5rem 0;
+    }
+
+    .code-block {
+      background:#1e293b; color:#e2e8f0; padding:1.2rem; border-radius:var(--radius);
+      font-family: 'JetBrains Mono', monospace; font-size:0.9rem; overflow-x:auto;
+      margin:1rem 0; line-height:1.7;
+    }
+
+    .table-wrap {
+      overflow-x:auto; margin:1.5rem 0;
+    }
+    table {
+      width:100%; border-collapse:collapse; background:white; border-radius:var(--radius);
+      overflow:hidden; border:1px solid var(--border);
+    }
+    th, td {
+      padding:0.8rem 1rem; text-align:left; border-bottom:1px solid var(--border);
+      font-size:0.95rem;
+    }
+    th { background:var(--surface); font-weight:600; color:var(--primary-dark); }
+    tr:last-child td { border-bottom:none; }
+
+    .related-grid {
+      display:grid; grid-template-columns: repeat(auto-fit, minmax(200px,1fr));
+      gap:1.2rem; margin-top:1.5rem;
+    }
+    .related-card {
+      background:white; border:1px solid var(--border); border-radius:var(--radius);
+      padding:1.2rem; text-decoration:none; color:var(--text); transition:0.2s;
+    }
+    .related-card:hover { box-shadow:0 6px 16px rgba(0,0,0,0.04); }
+    .related-card strong { display:block; margin-bottom:0.4rem; color:var(--primary-dark); }
+    .related-card p { font-size:0.9rem; color:var(--text-secondary); }
+
+    footer {
+      background:var(--surface); border-top:1px solid var(--border);
+      text-align:center; padding:1.8rem; color:var(--text-secondary); font-size:0.9rem;
+      margin-top:auto;
+    }
+    footer a { color:var(--primary); text-decoration:none; }
+
+    @media (max-width:700px) {
+      .nav-links { gap:1rem; }
+    }
+  </style>
+</head>
+<body>
+  <nav class="navbar">
+    <a href="../" class="nav-logo">⚡ Clash Hub</a>
+    <ul class="nav-links">
+      <li><a href="../">首页</a></li>
+      <li><a href="../download.html">📥 下载中心</a></li>
+      <li><a href="../tutorial.html">📘 配置教程</a></li>
+      <li><a href="../faq.html">❓ 常见问题</a></li>
+      <li><a href="../changelog.html">📋 更新日志</a></li>
+      <li><a href="../about.html">💡 关于项目</a></li>
+    </ul>
+  </nav>
+
+  <div class="container">
+    <header class="hero">
+      <h1>Clash 拆分隧道完全指南：让代理与直连各行其道</h1>
+      <p>按进程、按网段精准控制流量，实现性能与便利的最佳平衡</p>
+    </header>
+
+    <div style="display:flex; justify-content:center; gap:2rem; color:var(--text-secondary); font-size:0.9rem; margin-bottom:1.5rem;">
+      <span>📅 2026-08-06</span>
+      <span>🕒 阅读时间约 16 分钟</span>
+      <span>🏷️ <a href="index.html" style="color:var(--primary);">高级分流</a></span>
+    </div>
+
+    <div class="toc">
+      <strong>📑 本文目录</strong>
+      <ul style="margin-top:0.6rem;">
+        <li><a href="#what">什么是拆分隧道？</a></li>
+        <li><a href="#why">为什么需要拆分隧道？</a></li>
+        <li><a href="#how">底层原理：路由表、进程匹配与策略路由</a></li>
+        <li><a href="#clash-impl">Clash 中的拆分隧道实现</a></li>
+        <li><a href="#config">完整配置示例：从简单绕过到精细控制</a></li>
+        <li><a href="#scenarios">实战场景：游戏、内网与多网卡</a></li>
+        <li><a href="#performance">性能与安全权衡</a></li>
+        <li><a href="#troubleshooting">故障排查：当流量走错了路</a></li>
+        <li><a href="#best-practices">最佳实践与演进方向</a></li>
+      </ul>
+    </div>
+
+    <article>
+      <section id="what">
+        <h2>🧩 什么是拆分隧道？</h2>
+        <p><strong>拆分隧道（Split Tunnel）</strong> 是一种网络配置策略，它允许你选择哪些应用或目的地的流量通过虚拟专用网络（VPN）或代理，哪些流量直接走本地网络。在传统 VPN 中，开启后所有流量都会经过 VPN 服务器，这可能导致访问国内网站速度变慢、内网资源不可达、游戏延迟增加等问题。拆分隧道正是为了解决这些痛点而生的。</p>
+        <p>在 Clash 语境中，拆分隧道通常指的是在 <strong>TUN 模式</strong> 下，指定部分应用程序或目标 IP 段“绕过”虚拟网卡，直接使用物理网卡通信，而其他流量则照常被代理。这和基于域名的规则分流有本质区别：规则分流是代理内部的决策（走哪个节点还是直连），而拆分隧道是更底层的“是否进入代理系统”的开关。</p>
+        <div class="info-box">
+          💡 <strong>一句话概括：</strong> 规则分流是在代理系统内部选择出口，而拆分隧道是决定哪些流量根本不进入代理系统。
+        </div>
+      </section>
+
+      <section id="why">
+        <h2>❓ 为什么需要拆分隧道？</h2>
+        <p>很多人以为 TUN 模式全局代理就是完美的，但实际上全局代理会带来一系列问题：</p>
+        <ul style="margin-left:1.5rem;">
+          <li><strong>内网服务不可达：</strong> 公司 VPN、打印机、NAS、路由器管理页面等局域网资源，在全局代理下可能因为路由被劫持而无法访问。</li>
+          <li><strong>部分应用不适配：</strong> 某些银行客户端、UWP 应用或 DRM 保护内容对代理敏感，强制代理可能导致功能异常或拒绝服务。</li>
+          <li><strong>游戏延迟与封包：</strong> 很多网络游戏使用 UDP 协议并检测代理 IP，如果所有游戏流量都走海外节点，不仅延迟高，还可能被反作弊系统封禁。</li>
+          <li><strong>性能损耗：</strong> 大流量下载（如系统更新、Steam 游戏下载）经过代理会增加服务器负担和本地 CPU 消耗，拆分隧道可以让这些流量直连满速下载。</li>
+        </ul>
+        <p>拆分隧道正是为了解决“既要全局代理的安全和便利，又要局部直连的性能和兼容性”这一矛盾而设计的。它让你可以精细地控制哪些流量走代理、哪些不走，实现灵活的网络策略。</p>
+      </section>
+
+      <section id="how">
+        <h2>⚙️ 底层原理：路由表、进程匹配与策略路由</h2>
+        <p>理解拆分隧道，需要先理解 TUN 模式是如何“接管”流量的。当 Clash 启用 TUN 模式后，系统会新增一条虚拟网卡，并修改路由表，让默认路由指向这个虚拟网卡。所有没有更具体路由的流量，都会被送到 Clash 内核处理。</p>
+        <p>拆分隧道的核心思想是<strong>在流量被劫持之前，把它拉回物理网卡</strong>。这通常通过以下三种机制实现：</p>
+        <h3>1. 路由表排除（IP 级绕过）</h3>
+        <p>最传统的方式，直接在系统路由表中添加更具体的路由条目，指向物理网卡的网关。例如，如果公司内网是 <code>10.0.0.0/8</code>，我们添加一条路由：</p>
+        <div class="code-block"><pre>route add 10.0.0.0 mask 255.0.0.0 192.168.1.1 metric 5</pre></div>
+        <p>这样所有发往 <code>10.x.x.x</code> 的流量都会直接走物理网卡，不会进入虚拟网卡。Windows 上，Clash Verge Rev 等客户端通常会自动处理这类路由。</p>
+        <h3>2. 进程名匹配（应用级绕过）</h3>
+        <p>更精细的控制是让某个特定程序（如 <code>game.exe</code>）的所有流量直连。Clash 本身不直接支持进程匹配，但可以通过外部工具（如 <strong>Proxifier</strong> 或系统防火墙规则）将特定进程的流量导向物理网卡。一些新锐客户端（如 Clash Verge Rev）也正在探索通过 WFP（Windows Filtering Platform）实现进程级别的绕过。</p>
+        <h3>3. 策略路由（Policy Routing）</h3>
+        <p>Linux 上更强大的方式，通过 <code>ip rule</code> 和自定义路由表，根据源 IP、fwmark 等条件决定流量的走向。例如，给需要绕过的流量打上特定标记，然后将其路由到本地物理网卡而非 TUN 接口。</p>
+        <p>对于大多数用户，IP 级绕过已经足够应对 90% 的场景。如果你需要更详细的 TUN 原理，请参阅 <a href="tun-optimization.html">《TUN 模式原理与优化指南》</a> 以及 <a href="Windows-TUN-Driver-Deep-Dive.html">《Windows TUN 驱动深度解析》</a>。</p>
+      </section>
+
+      <section id="clash-impl">
+        <h2>🖥️ Clash 中的拆分隧道实现</h2>
+        <p>虽然 Clash 核心配置文件中没有直接名为 <code>split-tunnel</code> 的字段，但我们可以通过现有的机制组合出拆分隧道的效果：</p>
+        <ul style="margin-left:1.5rem;">
+          <li><strong><code>tun.bypass</code> 或类似字段：</strong> 部分 Clash 内核（如 Clash.Meta）支持在 TUN 配置中直接指定 IP 段或域名排除。例如：
+            <div class="code-block"><pre>tun:
+  enable: true
+  bypass:
+    - "10.0.0.0/8"
+    - "192.168.0.0/16"
+    - "*.company.local"</pre></div>
+          </li>
+          <li><strong>规则中的 <code>DIRECT</code>：</strong> 通过在规则中使用 <code>DIRECT</code>，可以指定某些流量不经过代理节点，但仍然会经过 TUN 虚拟网卡和 Clash 内核处理。这不完全等同于拆分隧道（因为流量还是进入了 Clash），但效果类似。</li>
+          <li><strong>系统防火墙规则：</strong> 在 Windows 防火墙中创建出站规则，针对特定程序的流量阻止其发往 TUN 网卡，强制走物理接口。</li>
+        </ul>
+        <p>其中，<code>bypass</code> 机制是最接近纯拆分隧道的方式，它会在内核层面直接放行匹配的流量，不进行任何代理处理，效率最高。如果你的客户端不支持该字段，请参考<a href="../download.html">下载中心</a>获取最新版本或查阅内核文档。</p>
+      </section>
+
+      <section id="config">
+        <h2>📝 完整配置示例：从简单绕过到精细控制</h2>
+        <h3>基础版：绕过局域网和国内 IP</h3>
+        <div class="code-block"><pre>tun:
+  enable: true
+  stack: system
+  auto-route: true
+  bypass:
+    - "10.0.0.0/8"
+    - "172.16.0.0/12"
+    - "192.168.0.0/16"
+    - "127.0.0.0/8"
+
+rules:
+  - GEOIP,CN,DIRECT
+  - MATCH,PROXY</pre></div>
+        <p>这样，所有局域网地址和国内 IP 的流量会直接绕过 TUN，不进入 Clash 处理流程，而其他流量正常走代理。这比在规则里用 <code>GEOIP,CN,DIRECT</code> 更底层，性能更好。</p>
+        <h3>进阶版：基于域名的绕过</h3>
+        <p>如果你希望某些域名不走代理（例如内网域名），可以在 <code>bypass</code> 中指定：</p>
+        <div class="code-block"><pre>tun:
+  bypass:
+    - "*.internal.company.com"
+    - "*.lan"</pre></div>
+        <p>注意，基于域名的绕过需要 Clash 内核支持 DNS 劫持和域名匹配，否则可能不生效。更稳妥的方式是使用 <a href="custom-rules.html">自定义规则</a> 配合 <code>DOMAIN-SUFFIX</code> 实现类似效果。</p>
+      </section>
+
+      <section id="scenarios">
+        <h2>🎯 实战场景：游戏、内网与多网卡</h2>
+        <h3>场景一：网游加速</h3>
+        <p>某款游戏使用 UDP 协议，且对代理 IP 敏感。你希望该游戏的流量直接走本地网络，而其他流量（如网页浏览）走代理。可以这样配置：</p>
+        <ol style="margin-left:1.5rem;">
+          <li>获取游戏服务器的 IP 段（可通过抓包或查询）。</li>
+          <li>将这些 IP 段加入 <code>bypass</code> 列表。</li>
+          <li>如果游戏有反作弊系统，还需确保绕过 TUN 后的流量不受其他网络层过滤影响。</li>
+        </ol>
+        <p>对于无法获取 IP 的情况，Windows 用户可以借助 <strong>ForceBindIP</strong> 等工具将游戏进程绑定到物理网卡 IP 上，实现进程级直连。更优雅的方案是参考 <a href="TCP-vs-UDP-in-Clash.html">《TCP 与 UDP 深度对比》</a> 中的游戏优化部分。</p>
+        <h3>场景二：公司 VPN 叠加</h3>
+        <p>你同时运行了 Clash TUN 和公司 VPN。公司 VPN 使用了 <code>10.8.0.0/16</code> 网段。如果不加配置，两个虚拟网卡会打架。解决方法是：</p>
+        <ul style="margin-left:1.5rem;">
+          <li>在 Clash 的 <code>bypass</code> 中添加公司 VPN 的网段。</li>
+          <li>确保路由优先级正确，让公司流量优先走 VPN 接口。可能需要手动调整接口跃点数。</li>
+          <li>如果公司 VPN 也强制修改路由表，考虑关闭 Clash 的 auto-route，手动维护路由。</li>
+        </ul>
+        <h3>场景三：多网卡（有线+无线）</h3>
+        <p>某些高级用户同时连接有线和无线网络，希望某些应用走有线（低延迟），某些走无线（大带宽）。这超出了 Clash 的范畴，但通过结合拆分隧道和操作系统策略路由可以实现。Clash 的角色是保证代理流量不受影响，同时允许指定流量绕过代理直连有线或无线网卡。</p>
+      </section>
+
+      <section id="performance">
+        <h2>⚖️ 性能与安全权衡</h2>
+        <p>拆分隧道不是银弹。它带来了便利，也引入了需要考虑的权衡：</p>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>方面</th><th>全局代理</th><th>拆分隧道</th></tr></thead>
+            <tbody>
+              <tr><td>网络覆盖</td><td>所有流量加密，安全性高</td><td>部分流量直连，可能泄漏信息</td></tr>
+              <tr><td>性能</td><td>所有流量经过代理，有额外开销</td><td>直连流量满速，降低 CPU 负担</td></tr>
+              <tr><td>配置复杂度</td><td>简单，一键开启</td><td>需要准确识别哪些流量需要绕过</td></tr>
+              <tr><td>内网兼容性</td><td>可能无法访问局域网</td><td>轻松访问内网资源</td></tr>
+              <tr><td>DNS 泄漏风险</td><td>较低（若配置正确）</td><td>绕过流量可能使用本地 DNS，需注意</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>如果你对隐私要求极高，建议谨慎使用拆分隧道，或者确保绕过的流量不涉及敏感数据。对于 DNS 泄漏，可参考 <a href="tun-optimization.html#dns-leak">TUN 模式 DNS 泄漏章节</a> 进行加固。</p>
+      </section>
+
+      <section id="troubleshooting">
+        <h2>🛠️ 故障排查：当流量走错了路</h2>
+        <div class="warning-box">
+          <strong>🛑 bypass 列表添加后不生效？</strong> 检查内核版本是否支持 <code>bypass</code> 字段，确认语法正确（缩进、CIDR 格式）。在日志中搜索 <code>bypass</code> 关键字查看是否有加载错误。
+        </div>
+        <div class="warning-box">
+          <strong>🛑 内网地址仍然无法访问？</strong> 可能是路由表的优先级问题。使用 <code>route print</code>（Windows）或 <code>ip route</code>（Linux）查看路由条目，确保 bypass 网段有对应的直连路由且 Metric 更低。
+        </div>
+        <div class="warning-box">
+          <strong>🛑 绕过代理后游戏仍然延迟高？</strong> 拆分隧道只是让流量直连，但网络本身的质量、出口带宽、运营商互联等仍然会影响延迟。直连不等于低延迟，特别是跨境游戏时。
+        </div>
+        <p>如果上述方法无法解决，可以在 <a href="../faq.html">常见问题</a> 页面查找更多网络诊断命令，或者结合 <a href="subscription-troubleshoot.html">订阅排障手册</a> 排查是否其他配置干扰。</p>
+      </section>
+
+      <section id="best-practices">
+        <h2>🏆 最佳实践与演进方向</h2>
+        <ul style="margin-left:1.5rem; line-height:2;">
+          <li><strong>优先使用 bypass 而非 DIREC T 规则：</strong> 对于明确的局域网和国内 IP 段，直接绕过 TUN 比让 Clash 处理更高效。</li>
+          <li><strong>定期审计绕过列表：</strong> 随着网络环境变化，IP 段和域名可能更新。可以结合 <a href="Building-Maintainable-Rule-Sets.html">《构建可维护的规则集》</a> 的思路进行自动化管理。</li>
+          <li><strong>进程级绕过的未来：</strong> Clash Verge Rev 等新兴客户端正在探索 WFP 级别的进程匹配，届时无需手动配置 IP 即可实现按应用绕过。保持关注 <a href="../changelog.html">更新日志</a>。</li>
+          <li><strong>多网卡场景：</strong> 如果你的机器有多个物理网络接口，可以利用操作系统策略路由进一步优化流量走向，但需与 Clash 的 auto-route 配合，避免冲突。</li>
+          <li><strong>安全第一：</strong> 绕过代理的流量不会经过加密，请确保这些流量不涉及隐私或敏感数据。</li>
+        </ul>
+        <p>拆分隧道是高级网络管理的重要工具，掌握它，你将能从容应对各种复杂的网络需求。如果你希望深入理解 Clash 内部的流量路径，推荐阅读 <a href="Inside-Clash-for-Windows.html">《透视 Clash for Windows 内部》</a> 和 <a href="Managing-Large-Configurations.html">《大型配置文件管理指南》</a>，从架构和工程层面进一步优化你的代理方案。</p>
+      </section>
+    </article>
+
+    <section>
+      <h2>📚 继续探索</h2>
+      <div class="related-grid">
+        <a href="tun-optimization.html" class="related-card">
+          <strong>🚀 TUN 模式原理与优化</strong>
+          <p>深入虚拟网卡与路由表的协作机制。</p>
+        </a>
+        <a href="Windows-TUN-Driver-Deep-Dive.html" class="related-card">
+          <strong>🪟 Windows TUN 驱动深度解析</strong>
+          <p>理解驱动层面如何影响拆分隧道行为。</p>
+        </a>
+        <a href="custom-rules.html" class="related-card">
+          <strong>📝 自定义规则编写</strong>
+          <p>在代理内部实现精细分流，与拆分隧道互补。</p>
+        </a>
+        <a href="Building-Maintainable-Rule-Sets.html" class="related-card">
+          <strong>📦 构建可维护规则集</strong>
+          <p>用自动化工具管理复杂的绕过和分流列表。</p>
+        </a>
+      </div>
+    </section>
+  </div>
+
+  <footer>
+    <p>© 2026 Clash 下载站 · 基于开源项目 Clash 构建 · <a href="https://clashforwinodws.github.io/Clash-for-Winodows/">clashforwinodws.github.io</a></p>
+    <p style="margin-top:0.4rem;">本站仅提供客户端下载与使用教程，不提供任何代理服务。</p>
+  </footer>
+
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Article",
+      "headline": "Clash 拆分隧道完全指南：让代理与直连各行其道",
+      "author": {
+        "@type": "Organization",
+        "name": "Clashforwindows"
+      },
+      "datePublished": "2026-08-06",
+      "description": "详解拆分隧道在 Clash 中的实现原理，包括路由表排除、进程匹配与策略路由，提供完整配置示例与游戏、内网等场景的实战方案。",
+      "image": "https://clashforwinodws.github.io/Clash-for-Winodows/favicon.ico",
+      "publisher": {
+        "@type": "Organization",
+        "name": "Clashforwindows",
+        "logo": {
+          "@type": "ImageObject",
+          "url": "https://clashforwinodws.github.io/Clash-for-Winodows/favicon.ico"
+        }
+      }
+    }
+  </script>
+</body>
+</html>
