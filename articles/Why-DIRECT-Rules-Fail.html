@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>明明写了直连规则，为什么流量仍然进入代理？| Clash 直连失效的十种真相</title>
+
+  <!-- SEO：聚焦 Clash 直连规则失效的各类原因，从规则语义到 DNS 模式、连接复用、TUN 路径 -->
+  <meta name="description" content="你明明写了 DIRECT 规则，抓包却发现流量还是走了代理节点。这不是玄学，而是十个可定位的技术陷阱：规则顺序被前置覆盖、DOMAIN 与 DOMAIN-SUFFIX 的语义误用、fake-ip 与 redir-host 下的匹配对象差异、连接复用延续旧规则、TUN 模式下流量在规则生效前已被劫持、IPv6 流量绕过 IPv4 规则、策略组嵌套导致的出口偏离、rule-provider 静默加载失败、DNS 解析结果与预期 IP 不符、多客户端系统代理叠加。本文提供完整的决策树与诊断命令，帮你逐层排除，直达根因。">
+  <meta name="keywords" content="Clash 直连规则失效, DIRECT 规则不生效, 规则匹配顺序, fake-ip 规则匹配, redir-host, 连接复用, TUN 模式直连, IPv6 代理, 策略组嵌套, rule-provider 加载失败, Clash 规则排查">
+  <meta name="author" content="Clashforwindows">
+
+  <link rel="icon" type="image/x-icon" href="../favicon.ico">
+  <link rel="shortcut icon" type="image/x-icon" href="../favicon.ico">
+  <link rel="canonical" href="https://clashforwinodws.github.io/Clash-for-Winodows/articles/Why-DIRECT-Rules-Fail.html">
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <style>
+    :root {
+      --primary: #1e6f9f;
+      --primary-dark: #145a7a;
+      --bg: #ffffff;
+      --surface: #f8fafc;
+      --border: #e2e8f0;
+      --text: #1e293b;
+      --text-secondary: #475569;
+      --accent: #f59e0b;
+      --radius: 12px;
+    }
+
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: var(--bg); color: var(--text); line-height:1.6;
+      display:flex; flex-direction:column; min-height:100vh;
+    }
+
+    .navbar {
+      background: rgba(255,255,255,0.9); border-bottom:1px solid var(--border);
+      padding:0.8rem 1.5rem; display:flex; flex-wrap:wrap; align-items:center;
+      justify-content:space-between; gap:1rem; position:sticky; top:0; z-index:50;
+      backdrop-filter: blur(12px);
+    }
+    .nav-logo {
+      font-weight:700; font-size:1.3rem; color:var(--primary-dark);
+      text-decoration:none; display:flex; align-items:center; gap:0.3rem;
+    }
+    .nav-links { display:flex; flex-wrap:wrap; gap:1.8rem; list-style:none; }
+    .nav-links a {
+      text-decoration:none; color:var(--text-secondary); font-weight:500;
+      font-size:0.95rem; transition:color 0.2s; white-space:nowrap;
+    }
+    .nav-links a:hover { color:var(--primary); }
+
+    .container {
+      max-width:900px; margin:0 auto; padding:1.5rem 1.5rem 3rem; width:100%; flex:1;
+    }
+
+    .hero {
+      text-align:center; margin:2rem 0 2rem;
+    }
+    .hero h1 {
+      font-size:2.4rem; font-weight:800;
+      background: linear-gradient(135deg, #0f2b4b, #1e6f9f);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text; margin-bottom:0.75rem;
+    }
+    .hero p { font-size:1.1rem; color:var(--text-secondary); max-width:680px; margin:0 auto; }
+
+    .card {
+      background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+      padding:2rem 1.8rem; margin-bottom:2rem;
+      box-shadow:0 4px 12px rgba(0,0,0,0.02);
+    }
+    h2 {
+      font-size:1.8rem; margin:1.8rem 0 1rem; color:var(--primary-dark);
+      display:flex; align-items:center; gap:0.6rem;
+    }
+    h2:first-of-type { margin-top:0; }
+    h3 { font-size:1.3rem; margin:1.5rem 0 0.5rem; color:#334155; }
+    h4 { font-size:1.1rem; margin:1.2rem 0 0.4rem; color:#475569; }
+
+    .toc {
+      background:white; border:1px solid var(--border); border-radius:var(--radius);
+      padding:1.5rem; margin-bottom:2rem;
+    }
+    .toc ul { list-style:none; display:flex; flex-wrap:wrap; gap:0.8rem 2rem; }
+    .toc a { color:var(--primary); text-decoration:none; font-weight:500; }
+
+    .info-box {
+      background:#e6f0f8; border-left:4px solid var(--primary);
+      padding:1.2rem 1.5rem; border-radius:var(--radius); margin:1.5rem 0;
+    }
+    .warning-box {
+      background:#fff7ed; border-left:4px solid var(--accent);
+      padding:1.2rem 1.5rem; border-radius:var(--radius); margin:1.5rem 0;
+    }
+    .error-box {
+      background:#fee2e2; border-left:4px solid #dc2626;
+      padding:1.2rem 1.5rem; border-radius:var(--radius); margin:1.5rem 0;
+    }
+
+    .code-block {
+      background:#1e293b; color:#e2e8f0; padding:1.2rem; border-radius:var(--radius);
+      font-family: 'JetBrains Mono', monospace; font-size:0.9rem; overflow-x:auto;
+      margin:1rem 0; line-height:1.7;
+    }
+
+    .table-wrap {
+      overflow-x:auto; margin:1.5rem 0;
+    }
+    table {
+      width:100%; border-collapse:collapse; background:white; border-radius:var(--radius);
+      overflow:hidden; border:1px solid var(--border);
+    }
+    th, td {
+      padding:0.8rem 1rem; text-align:left; border-bottom:1px solid var(--border);
+      font-size:0.95rem;
+    }
+    th { background:var(--surface); font-weight:600; color:var(--primary-dark); }
+    tr:last-child td { border-bottom:none; }
+
+    .cause-card {
+      background:white; border:1px solid var(--border); border-radius:var(--radius);
+      padding:1.5rem; margin-bottom:1.5rem; border-left:4px solid var(--primary);
+    }
+    .cause-card h3 {
+      margin-top:0; display:flex; align-items:center; gap:0.5rem;
+      color:var(--primary-dark);
+    }
+    .cause-num {
+      background:var(--primary); color:white; width:28px; height:28px;
+      border-radius:50%; display:inline-flex; align-items:center; justify-content:center;
+      font-size:0.85rem; font-weight:700; flex-shrink:0;
+    }
+
+    .decision-tree {
+      background:white; border:1px solid var(--border); border-radius:var(--radius);
+      padding:1.5rem; margin:1.5rem 0; font-family:'JetBrains Mono',monospace;
+      font-size:0.85rem; line-height:1.9; overflow-x:auto;
+    }
+
+    .related-grid {
+      display:grid; grid-template-columns: repeat(auto-fit, minmax(200px,1fr));
+      gap:1.2rem; margin-top:1.5rem;
+    }
+    .related-card {
+      background:white; border:1px solid var(--border); border-radius:var(--radius);
+      padding:1.2rem; text-decoration:none; color:var(--text); transition:0.2s;
+    }
+    .related-card:hover { box-shadow:0 6px 16px rgba(0,0,0,0.04); }
+    .related-card strong { display:block; margin-bottom:0.4rem; color:var(--primary-dark); }
+    .related-card p { font-size:0.9rem; color:var(--text-secondary); }
+
+    footer {
+      background:var(--surface); border-top:1px solid var(--border);
+      text-align:center; padding:1.8rem; color:var(--text-secondary); font-size:0.9rem;
+      margin-top:auto;
+    }
+    footer a { color:var(--primary); text-decoration:none; }
+
+    @media (max-width:700px) {
+      .nav-links { gap:1rem; }
+    }
+  </style>
+</head>
+<body>
+  <nav class="navbar">
+    <a href="../" class="nav-logo">⚡ Clash Hub</a>
+    <ul class="nav-links">
+      <li><a href="../">首页</a></li>
+      <li><a href="../download.html">📥 下载中心</a></li>
+      <li><a href="../tutorial.html">📘 配置教程</a></li>
+      <li><a href="../faq.html">❓ 常见问题</a></li>
+      <li><a href="../changelog.html">📋 更新日志</a></li>
+      <li><a href="../about.html">💡 关于项目</a></li>
+    </ul>
+  </nav>
+
+  <div class="container">
+    <header class="hero">
+      <h1>明明写了直连规则，为什么流量仍然进入代理？</h1>
+      <p>十个可定位的技术真相，帮你撕开"玄学"的表象</p>
+    </header>
+
+    <div style="display:flex; justify-content:center; gap:2rem; color:var(--text-secondary); font-size:0.9rem; margin-bottom:1.5rem;">
+      <span>📅 2026-09-29</span>
+      <span>🕒 阅读时间约 24 分钟</span>
+      <span>🏷️ <a href="index.html" style="color:var(--primary);">排障深潜</a></span>
+    </div>
+
+    <div class="toc">
+      <strong>📑 本文目录</strong>
+      <ul style="margin-top:0.6rem;">
+        <li><a href="#intro">一个几乎人人都遇到过的问题</a></li>
+        <li><a href="#mental-model">先建立正确的心理模型</a></li>
+        <li><a href="#cause1">原因一：规则顺序被前置覆盖</a></li>
+        <li><a href="#cause2">原因二：DOMAIN 与 DOMAIN-SUFFIX 的语义误用</a></li>
+        <li><a href="#cause3">原因三：DNS 模式决定了匹配的对象</a></li>
+        <li><a href="#cause4">原因四：连接复用延续了旧规则</a></li>
+        <li><a href="#cause5">原因五：TUN 模式下的流量早于规则被劫持</a></li>
+        <li><a href="#cause6">原因六：IPv6 是规则的漏网之鱼</a></li>
+        <li><a href="#cause7">原因七：策略组嵌套导致出口偏离</a></li>
+        <li><a href="#cause8">原因八：rule-provider 静默加载失败</a></li>
+        <li><a href="#cause9">原因九：DNS 解析结果与预期 IP 不符</a></li>
+        <li><a href="#cause10">原因十：多客户端与系统代理叠加</a></li>
+        <li><a href="#decision-tree">系统化诊断决策树</a></li>
+        <li><a href="#prevention">预防性设计：让直连规则更可靠</a></li>
+        <li><a href="#summary">总结：直连失效是一道减法题</a></li>
+      </ul>
+    </div>
+
+    <article>
+      <section id="intro">
+        <h2>😤 一个几乎人人都遇到过的问题</h2>
+        <p>你在配置文件里认认真真写下了这样的规则：</p>
+        <div class="code-block"><pre>rules:
+  - DOMAIN-SUFFIX,example.com,DIRECT
+  - GEOIP,CN,DIRECT
+  - MATCH,PROXY</pre></div>
+        <p>你的意图很明确：<code>example.com</code> 走直连，国内 IP 走直连，其他走代理。</p>
+        <p>然后你打开浏览器访问 <code>www.example.com</code>，页面加载缓慢。你打开 <code>ipinfo.io</code>，显示的却是代理节点的 IP。你翻遍日志，发现这条规则根本没有被命中。</p>
+        <p>这不是个例。在 Clash 社区里，"我明明写了 DIRECT，为什么还是走了代理"是出现频率最高的提问之一。更让人困扰的是，<strong>它的原因不是单一的</strong>——可能来自规则语义、DNS 模式、连接状态、系统配置等十来个完全不同的层次。</p>
+        <p>本文的目标不是给出一个万能答案，而是提供一套<strong>系统化的排查框架</strong>，让你能逐层收敛，最终定位到具体的那一个根因。</p>
+        <div class="info-box">
+          💡 <strong>阅读建议：</strong> 如果你还没建立规则系统的基础认知，建议先阅读 <a href="DOMAIN-vs-DOMAIN-SUFFIX.html">《DOMAIN 与 DOMAIN-SUFFIX 对决》</a> 和 <a href="custom-rules.html">《如何编写高效的自定义代理规则》</a>，再回来看本文的深层原因分析。
+        </div>
+      </section>
+
+      <section id="mental-model">
+        <h2>🧠 先建立正确的心理模型</h2>
+        <p>在深入具体原因之前，我们必须先修正一个常见的思维误区：<strong>"写了 DIRECT 规则，流量就一定直连"是不成立的。</strong></p>
+        <p>DIRECT 规则的完整语义是：<strong>当这条规则被命中时，Clash 内核会将流量以直连方式转发出去。</strong> 注意其中的两个关键词：</p>
+        <ul style="margin-left:1.5rem;">
+          <li><strong>"被命中"</strong>——如果流量根本没有匹配到这条规则，DIRECT 就不会生效。</li>
+          <li><strong>"Clash 内核转发"</strong>——DIRECT 不是"绕过 Clash"，而是"由 Clash 决定不经过代理节点转发"。流量依然经过内核处理。</li>
+        </ul>
+        <p>因此，"直连失效"这个说法其实包含了两类完全不同的问题：</p>
+        <ol style="margin-left:1.5rem; line-height:1.9;">
+          <li><strong>规则未被命中：</strong> 流量因为某种原因没有匹配到你的 DIRECT 规则。</li>
+          <li><strong>规则被命中但行为不符：</strong> 规则命中了，但因为 DNS、IPv6 或连接复用的原因，流量的实际走向与预期不符。</li>
+        </ol>
+        <p>这两类问题的排查方向完全不同。本文的十个原因将分别归属于这两类，并在诊断决策树中给出区分方法。</p>
+        <div class="info-box">
+          💡 <strong>与流量生命周期的关系：</strong> 规则匹配发生在流量生命周期的<strong>第三阶段</strong>。理解这一点有助于你判断"问题发生在规则的哪一侧"。如果你还没读过，建议先看 <a href="Traffic-Lifecycle-in-Clash.html">《Traffic Lifecycle in Clash》</a>，建立完整的阶段认知。
+        </div>
+      </section>
+
+      <section id="cause1">
+        <h2>🔍 原因一：规则顺序被前置覆盖</h2>
+        <p>这是最常见、也是最容易排查的原因。</p>
+        <h3>问题表现</h3>
+        <p>你的配置里明明写了 <code>DOMAIN-SUFFIX,example.com,DIRECT</code>，但在它的<strong>上方</strong>存在另一条更宽泛的规则把同样的流量提前拦截了：</p>
+        <div class="code-block"><pre>rules:
+  - DOMAIN-KEYWORD,example,PROXY          # ← 这条在前面
+  - DOMAIN-SUFFIX,example.com,DIRECT      # ← 你的规则，永远不会生效
+  - MATCH,PROXY</pre></div>
+        <p>当访问 <code>www.example.com</code> 时，关键词规则会先命中，流量走了代理。你的 DIRECT 规则形同虚设。</p>
+        <h3>为什么在大型规则集里特别常见？</h3>
+        <p>当配置合并了多个 rule-provider 时，合并工具往往按"规则集加载顺序"拼接规则，而不会做语义层面的优先级分析。结果是：某个宽泛的 REJECT 或 PROXY 关键词规则可能恰好压在你的精确 DIRECT 规则之上。</p>
+        <p>关于规则集合并的工程化方法，可参考 <a href="Building-Maintainable-Rule-Sets.html">《构建可维护的规则集》</a> 中关于去重与顺序的部分。</p>
+        <h3>诊断方法</h3>
+        <p>开启 debug 日志，访问目标域名，观察日志中命中的是哪条规则：</p>
+        <div class="code-block"><pre>[DEBUG] www.example.com matched rule: DOMAIN-KEYWORD,example,PROXY</pre></div>
+        <p>如果命中的不是你的 DIRECT 规则，就说明问题在顺序上。</p>
+        <div class="warning-box">
+          ⚠️ <strong>修复原则：</strong> 精确规则永远在宽泛规则之前。REJECT 通常最靠前（尽早丢弃），然后是精确的 DIRECT 和 PROXY，最后是 GEOIP 和 MATCH 兜底。
+        </div>
+      </section>
+
+      <section id="cause2">
+        <h2>🎯 原因二：DOMAIN 与 DOMAIN-SUFFIX 的语义误用</h2>
+        <p>这个原因的隐蔽性比顺序问题更高，因为它不涉及"顺序"，而是<strong>规则本身写错了类型</strong>。</p>
+        <h3>问题表现</h3>
+        <div class="code-block"><pre>rules:
+  - DOMAIN,example.com,DIRECT
+  - MATCH,PROXY</pre></div>
+        <p>你期望 <code>example.com</code> 及其子域名都直连，但实际上 <code>DOMAIN</code> 只精确匹配 <code>example.com</code> 这一个域名。访问 <code>www.example.com</code> 时，规则不命中，最终落到 <code>MATCH,PROXY</code>，走了代理。</p>
+        <h3>为什么容易混淆？</h3>
+        <p>因为在日常表达中，"example.com"常常被当作"example.com 这个网站"的代称，包含了它的所有子域名。但规则的语义是严格的字符匹配，不是概念匹配。</p>
+        <h3>完整的语义对比</h3>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>请求域名</th><th>DOMAIN,example.com</th><th>DOMAIN-SUFFIX,example.com</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>example.com</code></td><td>✅ 命中</td><td>✅ 命中</td></tr>
+              <tr><td><code>www.example.com</code></td><td>❌ 不命中</td><td>✅ 命中</td></tr>
+              <tr><td><code>api.example.com</code></td><td>❌ 不命中</td><td>✅ 命中</td></tr>
+              <tr><td><code>example.com.cn</code></td><td>❌ 不命中</td><td>❌ 不命中</td></tr>
+              <tr><td><code>notexample.com</code></td><td>❌ 不命中</td><td>❌ 不命中</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>详细的匹配引擎实现分析见 <a href="DOMAIN-vs-DOMAIN-SUFFIX.html">《DOMAIN 与 DOMAIN-SUFFIX 对决》</a>。</p>
+        <h3>诊断方法</h3>
+        <p>把 <code>DOMAIN</code> 临时改为 <code>DOMAIN-SUFFIX</code> 测试。如果问题消失，说明就是类型误用。更严谨的方式是在 debug 日志中确认请求的完整域名，再与规则逐字符对比。</p>
+      </section>
+
+      <section id="cause3">
+        <h2>🌐 原因三：DNS 模式决定了匹配的对象</h2>
+        <p>这是所有原因中<strong>最容易被忽略、也最"反直觉"</strong>的一个。</p>
+        <h3>问题的本质</h3>
+        <p>规则匹配的对象取决于 DNS 工作模式：</p>
+        <ul style="margin-left:1.5rem;">
+          <li><strong>fake-ip 模式：</strong> 匹配的是<strong>还原出的域名</strong>。你写的 <code>DOMAIN-SUFFIX</code> 规则可以正常工作。</li>
+          <li><strong>redir-host 模式：</strong> 匹配的是<strong>DNS 解析出的真实 IP</strong>。域名类规则可能依然有效（内核会保留域名信息），但 <code>GEOIP</code> 和 <code>IP-CIDR</code> 规则会以真实 IP 为准。</li>
+        </ul>
+        <p>关键陷阱在于：<strong>如果你同时使用了域名规则和 IP 规则，并且 DNS 模式切换过，行为可能完全不同。</strong></p>
+        <h3>一个典型场景</h3>
+        <p>你在 redir-host 模式下写了一条 <code>GEOIP,CN,DIRECT</code>，一切正常。后来为了优化延迟切换到 fake-ip 模式，发现某些国内网站开始走代理了——这是因为 fake-ip 模式下的 GEOIP 匹配时机和结果发生了变化，某些域名的真实 IP 可能被解析到海外 CDN。</p>
+        <h3>与 TUN 模式的交互</h3>
+        <p>在 TUN 模式下，DNS 劫持是默认行为，<a href="Cache-System.html#dns-cache">Fake-IP 映射表</a> 成为规则匹配的关键基础设施。如果映射表出现问题（比如某个域名没有被正确记录），规则匹配就会失去依据。这部分细节在 <a href="tun-optimization.html#dns-leak">TUN 模式 DNS 章节</a> 中有完整讨论。</p>
+        <h3>诊断方法</h3>
+        <p>在客户端日志中查看 DNS 解析结果：</p>
+        <div class="code-block"><pre>[DEBUG] dns resolve www.example.com -> 93.184.216.34
+[DEBUG] matched rule: GEOIP,US,PROXY</pre></div>
+        <p>如果解析出的 IP 属于海外，而你又依赖 GEOIP 规则做直连判断，就会产生"直连规则失效"的错觉。真正的解决方案是为该域名单独写一条基于域名的 DIRECT 规则。</p>
+      </section>
+
+      <section id="cause4">
+        <h2>🔁 原因四：连接复用延续了旧规则</h2>
+        <p>这个原因非常微妙，通常发生在你"刚刚修改了规则"的场景中。</p>
+        <h3>问题表现</h3>
+        <p>你把某个域名从 PROXY 改成了 DIRECT，重启客户端后测试，发现流量还是走了代理。或者你更新了订阅，规则变了，但某些连接的行为没有变化。</p>
+        <h3>为什么？</h3>
+        <p>Clash 采用<strong>热重载</strong>机制——更新配置时不会强制断开已建立的连接，而是让它们继续使用旧配置运行，直到自然结束。这是为了让正在进行的下载、视频流不被打断，但副作用是<strong>旧规则的"残余"会持续一段时间</strong>。</p>
+        <p>更微妙的是，<a href="Cache-System.html#conn-reuse">连接池复用</a> 会让后续的请求继续使用已建立的连接——包括它们的出口节点和规则决策。这就是为什么"改了规则之后某些站点要过几分钟才生效"。</p>
+        <h3>与规则匹配缓存的关系</h3>
+        <p>除了连接复用，<a href="Cache-System.html#rule-cache">规则匹配缓存</a> 也可能造成类似效果。虽然热重载会清空规则缓存，但在某些内核实现中，清空是异步的，可能存在短暂的窗口期。</p>
+        <h3>诊断方法</h3>
+        <p>查看当前活动连接列表（通过 API <code>GET /connections</code>），观察目标域名的连接是否仍然存在。如果存在，说明是旧连接在起作用，等待其超时或手动断开即可。</p>
+        <div class="info-box">
+          💡 <strong>验证技巧：</strong> 完全退出 Clash 再重新启动，如果问题消失，基本可以确认是连接复用造成的滞后。这与 <a href="Subscription-Update-Internals.html">订阅更新流程</a> 中讨论的热重载机制直接相关。
+        </div>
+      </section>
+
+      <section id="cause5">
+        <h2>🔒 原因五：TUN 模式下的流量早于规则被劫持</h2>
+        <p>TUN 模式是"直连失效"问题的高发区，因为它改变了流量进入 Clash 的方式。</p>
+        <h3>问题的本质</h3>
+        <p>在 TUN 模式下，所有流量（包括 UDP、ICMP）都被虚拟网卡拦截，<strong>无论目标地址是哪里</strong>。流量进入 Clash 后才会进行规则匹配。这意味着：</p>
+        <ul style="margin-left:1.5rem;">
+          <li>如果 TUN 的配置本身有问题（比如 <code>auto-route</code> 或 <code>bypass</code> 设置不当），流量可能在规则匹配前就被错误路由。</li>
+          <li>如果规则里有 <code>MATCH,PROXY</code> 兜底，而某个直连规则没命中，流量就会走代理——这本身没错，但用户会误以为"直连失败"。</li>
+        </ul>
+        <h3>最常见的情况：DNS 劫持的副作用</h3>
+        <p>TUN 模式通常会启用 DNS 劫持，把 53 端口的查询重定向到 Clash 内置 DNS。如果这个过程中出现问题，某些域名的解析会失败或被缓存污染，导致后续的规则匹配基于错误的 IP。</p>
+        <h3>诊断方法</h3>
+        <p>检查 TUN 配置中的 <code>bypass</code> 列表是否正确包含了需要直连的网段。如果想把局域网和内网流量彻底绕过 Clash，应该在 TUN 层做 bypass，而不是仅靠规则。相关技术细节见 <a href="What-Is-Split-Tunnel.html">《拆分隧道完全指南》</a> 和 <a href="Windows-TUN-Driver-Deep-Dive.html">《Windows TUN 驱动深度解析》</a>。</p>
+        <div class="warning-box">
+          ⚠️ <strong>关键区别：</strong> 规则里的 DIRECT 是"经过 Clash 但不走节点"，TUN 的 bypass 是"根本不进入 Clash"。两者解决的是不同层次的问题，不能互相替代。
+        </div>
+      </section>
+
+      <section id="cause6">
+        <h2>🌍 原因六：IPv6 是规则的漏网之鱼</h2>
+        <p>这个原因常常被完全忽略，因为大多数用户只关注 IPv4。</p>
+        <h3>问题表现</h3>
+        <p>你的规则里写了 <code>IP-CIDR,10.0.0.0/8,DIRECT</code> 和一系列 IPv4 直连规则，但访问某些支持 IPv6 的网站时，流量却走了代理。</p>
+        <h3>为什么？</h3>
+        <p>IPv4 和 IPv6 是<strong>两条独立的协议栈</strong>。当域名同时拥有 A 记录（IPv4）和 AAAA 记录（IPv6）时，操作系统会根据 RFC 6724 的地址选择策略决定使用哪一个。如果选择了 IPv6，而你的规则里只有 IPv4 的 <code>IP-CIDR</code>，那么这条流量可能：</p>
+        <ul style="margin-left:1.5rem;">
+          <li>无法命中 IPv4 规则。</li>
+          <li>直接落到 <code>MATCH,PROXY</code>，走了代理。</li>
+          <li>或者被 <code>GEOIP</code> 规则错误判断（如果 GEOIP 数据库对 IPv6 的支持不完整）。</li>
+        </ul>
+        <h3>诊断方法</h3>
+        <p>在 Windows 上用 <code>ping -6 example.com</code> 或 <code>nslookup -type=AAAA example.com</code> 检查是否有 IPv6 地址。在 Clash 日志中观察连接的目标地址类型。</p>
+        <h3>解决方案</h3>
+        <p>有两个方向：</p>
+        <ul style="margin-left:1.5rem;">
+          <li><strong>补全 IPv6 规则：</strong> 添加 <code>IP-CIDR6</code> 规则覆盖直连的 IPv6 网段。</li>
+          <li><strong>禁用 IPv6：</strong> 在配置中关闭 IPv6 解析（<code>ipv6: false</code>），强制所有流量走 IPv4。这样 IPv4 规则就能覆盖所有流量。</li>
+        </ul>
+        <p>两种方案各有取舍。如果 ISP 的 IPv6 体验良好，建议补全规则；如果 IPv6 链路质量不稳定，禁用是更简单的选择。相关讨论见 <a href="TCP-vs-UDP-in-Clash.html">《TCP 与 UDP 深度对比》</a> 中的协议栈部分。</p>
+      </section>
+
+      <section id="cause7">
+        <h2>🧩 原因七：策略组嵌套导致出口偏离</h2>
+        <p>这个原因的隐蔽性在于：规则<strong>确实命中了 DIRECT</strong>，但流量最终还是走了代理——因为它进入了另一个策略组，而这个策略组内部又选择了代理节点。</p>
+        <h3>问题表现</h3>
+        <div class="code-block"><pre>proxy-groups:
+  - name: DIRECT
+    type: select
+    proxies:
+      - 日本节点          # ← 名字叫 DIRECT，但里面放的是代理节点！
+      - DIRECT
+
+rules:
+  - DOMAIN-SUFFIX,example.com,DIRECT   # 规则命中了
+  - MATCH,PROXY</pre></div>
+        <p>规则命中了名为 <code>DIRECT</code> 的策略组，但这个策略组是 <code>select</code> 类型，且当前选中的是"日本节点"。于是流量走了代理。</p>
+        <h3>为什么会出现这种情况？</h3>
+        <p>通常是因为用户对策略组的命名产生了误解——以为"策略组名叫 DIRECT，就代表直连"。实际上，<strong>策略组的名字只是一个标识符，它是否直连取决于类型和内部的选择</strong>。</p>
+        <p>另一个常见情形是策略组嵌套：</p>
+        <div class="code-block"><pre>proxy-groups:
+  - name: 国内直连
+    type: select
+    proxies:
+      - 直连组          # ← 引用了另一个组
+  - name: 直连组
+    type: url-test
+    proxies: [节点A, 节点B]    # ← 实际上是自动选节点</pre></div>
+        <p>"国内直连"这个组最终会走代理，因为它引用的"直连组"是一个 url-test 组。嵌套层的命名误导了用户。</p>
+        <h3>诊断方法</h3>
+        <p>在客户端 UI 中查看目标策略组的<strong>当前选中项</strong>。如果它显示的是一个节点而非 <code>DIRECT</code>，问题就在这里。策略组机制的完整解析见 <a href="proxy-group-guide.html">《策略组完全解析》</a>。</p>
+      </section>
+
+      <section id="cause8">
+        <h2>📦 原因八：rule-provider 静默加载失败</h2>
+        <p>如果你依赖外部规则集做直连判断，加载失败会导致"规则存在但不生效"。</p>
+        <h3>问题表现</h3>
+        <p>你的规则里有 <code>RULE-SET,cn-domain,DIRECT</code>，但这个规则集在启动或更新时加载失败。Clash 不会因此报错退出，而是<strong>静默跳过这个规则</strong>，继续处理后续规则。结果是所有本应直连的域名都落到了 <code>MATCH,PROXY</code>。</p>
+        <h3>为什么会静默失败？</h3>
+        <p>因为 Clash 的设计哲学是"可用性优先"。如果某个 rule-provider 加载失败，与其让整个客户端无法工作，不如跳过这个规则集继续运行。但这也意味着<strong>用户完全无从察觉</strong>——除非主动检查日志。</p>
+        <h3>诊断方法</h3>
+        <p>在日志中搜索 <code>rule-provider</code> 或 <code>provider</code> 关键字：</p>
+        <div class="code-block"><pre>[ERROR] rule-provider cn-domain: load failed: connect timeout
+[WARN] rule-provider cn-domain: using cached version (expired)</pre></div>
+        <p>如果看到类似日志，说明规则集没有按预期更新或加载。</p>
+        <h3>解决方案</h3>
+        <ul style="margin-left:1.5rem;">
+          <li>检查 provider URL 是否可访问。</li>
+          <li>延长 <code>interval</code>，避免启动时因网络问题触发失败。</li>
+          <li>改用本地文件路径的 provider，彻底避免网络依赖。</li>
+          <li>使用 GitHub Actions 定期拉取到自己的仓库，客户端从 CDN 读取。方案见 <a href="Building-Maintainable-Rule-Sets.html#automation">规则集自动化更新</a>。</li>
+        </ul>
+      </section>
+
+      <section id="cause9">
+        <h2>🔬 原因九：DNS 解析结果与预期 IP 不符</h2>
+        <p>这个原因与第三个原因（DNS 模式）相关，但更偏向"解析结果异常"而非"模式差异"。</p>
+        <h3>问题表现</h3>
+        <p>你期望某个域名解析到国内 IP，从而命中 <code>GEOIP,CN,DIRECT</code> 规则。但实际解析到了一个海外 IP，导致流量走了代理。</p>
+        <h3>为什么会这样？</h3>
+        <ul style="margin-left:1.5rem;">
+          <li><strong>CDN 调度：</strong> 大型网站使用 Anycast 或 GeoDNS，从不同位置解析可能返回不同 IP。</li>
+          <li><strong>DNS 污染：</strong> 本地网络中的 DNS 请求被篡改，返回了错误的 IP。</li>
+          <li><strong>上游 DNS 选择：</strong> Clash 配置中的 <code>nameserver</code> 与 <code>fallback</code> 策略可能导致国内外域名被送到不同的解析器。</li>
+          <li><strong>缓存污染：</strong> 曾经解析到错误 IP 的结果被缓存，后续查询继续使用错误结果。</li>
+        </ul>
+        <h3>诊断方法</h3>
+        <p>在 debug 日志中对比不同 DNS 服务器的解析结果：</p>
+        <div class="code-block"><pre>[DEBUG] dns: query www.example.com via 223.5.5.5 -> 93.184.216.34 (US)
+[DEBUG] dns: query www.example.com via 8.8.8.8 -> 104.18.32.7 (US)</pre></div>
+        <p>如果国内 DNS 也返回了海外 IP，说明该域名确实使用了海外 CDN，此时应该用域名规则而非 GEOIP 规则。</p>
+        <h3>解决方案</h3>
+        <p>对于需要精确直连的关键域名，<strong>不要依赖 GEOIP，而是直接使用 DOMAIN-SUFFIX 规则</strong>。这是最可靠的方式。DNS 缓存的完整机制见 <a href="Cache-System.html#dns-cache">缓存系统的 DNS 章节</a>。</p>
+      </section>
+
+      <section id="cause10">
+        <h2>🖥️ 原因十：多客户端与系统代理叠加</h2>
+        <p>最后这个原因与 Clash 本身无关，但会造成"规则不生效"的假象。</p>
+        <h3>问题表现</h3>
+        <p>你同时运行了 Clash 和另一个代理工具（比如旧版 CFW、Clash Verge、Surge、或者其他 VPN 客户端），或者系统中残留了旧的代理设置。流量被另一个程序接管，Clash 的规则自然无从生效。</p>
+        <h3>为什么难以察觉？</h3>
+        <p>因为多个代理工具会<strong>争抢系统代理设置</strong>。后启动的程序会覆盖先启动的设置，你看到的现象是"规则时灵时不灵"——实际上取决于哪个程序先启动、哪个程序后覆盖。</p>
+        <h3>诊断方法</h3>
+        <p>检查系统中是否有多个代理进程：</p>
+        <div class="code-block"><pre>tasklist | findstr /i "clash"
+netstat -ano | findstr "7890"
+route print | findstr "0.0.0.0"</pre></div>
+        <p>如果发现多个代理相关进程或多个默认路由，说明存在叠加。</p>
+        <h3>与 TUN 驱动残留的关系</h3>
+        <p>从 CFW 迁移到其他客户端的用户，经常会遇到旧的 <code>cfw-tun</code> 虚拟网卡残留问题。这会导致路由表混乱，流量可能被错误地引导到已经失效的接口。彻底的清理方法见 <a href="Windows-TUN-Driver-Deep-Dive.html#cleanup">《Windows TUN 驱动深度解析》</a> 的清理章节。</p>
+        <div class="warning-box">
+          ⚠️ <strong>清理清单：</strong> 卸载不用的代理客户端 → 删除虚拟网卡 → 清理注册表残留 → 重置系统代理设置 → 重启电脑。每一步都不应省略。
+        </div>
+      </section>
+
+      <section id="decision-tree">
+        <h2>🌳 系统化诊断决策树</h2>
+        <p>把十个原因组织成可执行的排查顺序，能显著提升效率。以下是推荐的诊断流程：</p>
+
+        <div class="decision-tree">
+<pre>目标：定位"直连规则失效"的根因
+
+步骤 1：确认问题是"规则未命中"还是"命中后行为不符"
+  ├─ 打开 debug 日志，访问目标域名
+  ├─ 观察日志中命中的规则
+  │
+  ├─ [未命中你的 DIRECT 规则]
+  │   ├─ 检查是否有更靠前的规则覆盖 → 原因一
+  │   ├─ 检查规则类型是否为 DOMAIN（应用 SUFFIX）→ 原因二
+  │   ├─ 检查 rule-provider 是否加载失败 → 原因八
+  │   └─ 检查 IPv6 是否绕过了 IPv4 规则 → 原因六
+  │
+  └─ [命中了 DIRECT 规则，但流量仍走代理]
+      ├─ 检查策略组当前选中项是否为节点 → 原因七
+      ├─ 检查是否有旧连接仍在复用 → 原因四
+      ├─ 检查 TUN 配置的 bypass 列表 → 原因五
+      └─ 检查 DNS 解析结果是否符合预期 → 原因三、九
+
+步骤 2：确认问题是否与"时机"有关
+  ├─ 刚改了规则不生效 → 原因四（连接复用/缓存）
+  ├─ 重启后正常 → 确认是热重载滞后
+  └─ 一直不生效 → 回到步骤 1
+
+步骤 3：确认是否存在环境干扰
+  ├─ 检查是否有多个代理进程 → 原因十
+  ├─ 检查虚拟网卡是否有残留 → 原因十
+  └─ 检查系统代理设置是否被覆盖 → 原因十</pre>
+        </div>
+
+        <p>按这个顺序排查，通常能在 5-10 分钟内定位到具体原因。每一步都有明确的验证方法，不需要凭直觉猜测。</p>
+      </section>
+
+      <section id="prevention">
+        <h2>🛡️ 预防性设计：让直连规则更可靠</h2>
+        <p>与其在出问题后排查，不如在设计配置时就避免这些陷阱。</p>
+
+        <h3>设计原则一：规则顺序遵循"精确到宽泛"</h3>
+        <div class="code-block"><pre>rules:
+  # 1. 精确 REJECT（尽早丢弃）
+  - DOMAIN-SUFFIX,ads.example.com,REJECT
+  # 2. 精确 DIRECT
+  - DOMAIN-SUFFIX,intranet.company.com,DIRECT
+  # 3. 精确 PROXY
+  - DOMAIN-SUFFIX,blocked-site.com,PROXY
+  # 4. 宽泛规则集
+  - RULE-SET,reject-list,REJECT
+  - RULE-SET,proxy-list,PROXY
+  # 5. GEOIP 兜底
+  - GEOIP,CN,DIRECT
+  # 6. MATCH 永远最后
+  - MATCH,PROXY</pre></div>
+
+        <h3>设计原则二：关键域名用 SUFFIX 而非 DOMAIN</h3>
+        <p>除非你真的只想匹配<strong>一个</strong>确切的域名（极少数情况），否则默认使用 <code>DOMAIN-SUFFIX</code>。这样能覆盖所有子域名，避免"部分生效"的困惑。</p>
+
+        <h3>设计原则三：策略组命名避免语义误导</h3>
+        <p>不要给一个实际会走代理的策略组起名叫"直连"。建议用<strong>用途</strong>而非<strong>行为</strong>命名：<code>国内网站</code>、<code>海外视频</code>、<code>下载专用</code>。这样即使内部配置变化，名字依然清晰。</p>
+
+        <h3>设计原则四：显式处理 IPv6</h3>
+        <p>如果你的网络环境支持 IPv6，建议在配置中做出明确选择：</p>
+        <ul style="margin-left:1.5rem;">
+          <li>如果要代理 IPv6，配置 <code>ipv6: true</code> 并补充 IPv6 规则。</li>
+          <li>如果不打算处理，配置 <code>ipv6: false</code> 禁用 IPv6 解析，让所有流量走 IPv4。</li>
+        </ul>
+        <p>不要留空——留空意味着行为取决于系统和网络环境，可能导致不可预测的结果。</p>
+
+        <h3>设计原则五：为规则集加载失败做兜底</h3>
+        <p>如果依赖 rule-provider 做直连，建议在规则集中<strong>同时保留关键的本地规则</strong>。这样即使 provider 加载失败，核心的直连需求仍然能满足。例如：</p>
+        <div class="code-block"><pre>rules:
+  - DOMAIN-SUFFIX,important-cn-site.com,DIRECT   # 本地硬编码
+  - RULE-SET,cn-domain,DIRECT                     # provider 兜底
+  - MATCH,PROXY</pre></div>
+
+        <h3>设计原则六：定期审计规则</h3>
+        <p>规则会随着时间累积，也可能随着服务变化而失效。定期的规则审计能发现"死规则"和"冲突规则"。审计方法见 <a href="Cost-of-Growing-Rule-Sets.html#audit">《规则膨胀的代价》</a> 中的审计章节。</p>
+      </section>
+
+      <section id="summary">
+        <h2>📌 总结：直连失效是一道减法题</h2>
+        <p>回顾本文的十个原因，你会发现它们并不是孤立的技巧，而是一道<strong>逐层排除的减法题</strong>：</p>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>#</th><th>原因</th><th>归属</th><th>验证成本</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>1</td><td>规则顺序被覆盖</td><td>未命中</td><td>低（看日志）</td></tr>
+              <tr><td>2</td><td>DOMAIN 语义误用</td><td>未命中</td><td>低（改类型测试）</td></tr>
+              <tr><td>3</td><td>DNS 模式差异</td><td>行为不符</td><td>中（需理解两种模式）</td></tr>
+              <tr><td>4</td><td>连接复用滞后</td><td>行为不符</td><td>低（重启验证）</td></tr>
+              <tr><td>5</td><td>TUN 模式劫持</td><td>行为不符</td><td>中（需理解 TUN 层）</td></tr>
+              <tr><td>6</td><td>IPv6 漏网</td><td>未命中</td><td>中（需协议栈知识）</td></tr>
+              <tr><td>7</td><td>策略组嵌套</td><td>行为不符</td><td>低（看 UI 选中项）</td></tr>
+              <tr><td>8</td><td>Provider 加载失败</td><td>未命中</td><td>低（看日志）</td></tr>
+              <tr><td>9</td><td>DNS 解析异常</td><td>未命中</td><td>中（需对比解析）</td></tr>
+              <tr><td>10</td><td>多客户端叠加</td><td>环境干扰</td><td>低（看进程列表）</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>核心结论可以浓缩为三句话：</p>
+        <ol style="margin-left:1.5rem; line-height:2;">
+          <li><strong>DIRECT 生效的前提是规则被命中</strong>——顺序、类型、Provider 加载都可能让规则失效。</li>
+          <li><strong>规则命中不等于流量直连</strong>——策略组嵌套、连接复用、TUN 劫持都可能改变实际走向。</li>
+          <li><strong>环境永远在参与决策</strong>——DNS 模式、IPv6、多客户端叠加都会影响最终结果。</li>
+        </ol>
+        <p>理解了这三点，你就不会再被"明明写了直连规则"所困扰。因为你知道，问题的答案从来不在那一行规则本身，而在它所处的<strong>整个系统</strong>之中。</p>
+        <p>如果你想继续深化这条排查路径，建议按顺序阅读：</p>
+        <ul style="margin-left:1.5rem; line-height:2;">
+          <li><a href="DOMAIN-vs-DOMAIN-SUFFIX.html">《DOMAIN 与 DOMAIN-SUFFIX 对决》</a> —— 规则语义的底层原理</li>
+          <li><a href="Traffic-Lifecycle-in-Clash.html">《Traffic Lifecycle in Clash》</a> —— 规则匹配在生命周期中的位置</li>
+          <li><a href="Cache-System.html">《缓存系统全解析》</a> —— 连接复用与规则缓存的影响</li>
+          <li><a href="What-Is-Split-Tunnel.html">《拆分隧道完全指南》</a> —— TUN 层 bypass 与规则层 DIRECT 的区别</li>
+          <li><a href="Cost-of-Growing-Rule-Sets.html">《规则膨胀的代价》</a> —— 规则数量带来的隐性成本</li>
+          <li><a href="Building-Maintainable-Rule-Sets.html">《构建可维护的规则集》</a> —— 用工程化方法避免规则冲突</li>
+        </ul>
+      </section>
+    </article>
+
+    <section>
+      <h2>📚 继续探索</h2>
+      <div class="related-grid">
+        <a href="DOMAIN-vs-DOMAIN-SUFFIX.html" class="related-card">
+          <strong>📖 DOMAIN 与 DOMAIN-SUFFIX 对决</strong>
+          <p>规则语义差异引发的匹配失效。</p>
+        </a>
+        <a href="Traffic-Lifecycle-in-Clash.html" class="related-card">
+          <strong>🔄 流量生命周期全解析</strong>
+          <p>理解规则匹配在整个流程中的位置。</p>
+        </a>
+        <a href="Cache-System.html" class="related-card">
+          <strong>💾 缓存系统全解析</strong>
+          <p>连接复用与规则缓存导致的滞后现象。</p>
+        </a>
+        <a href="What-Is-Split-Tunnel.html" class="related-card">
+          <strong>🚀 拆分隧道完全指南</strong>
+          <p>TUN bypass 与规则 DIRECT 的本质区别。</p>
+        </a>
+        <a href="Cost-of-Growing-Rule-Sets.html" class="related-card">
+          <strong>📉 规则膨胀的代价</strong>
+          <p>规则冲突与死规则的成因分析。</p>
+        </a>
+        <a href="Building-Maintainable-Rule-Sets.html" class="related-card">
+          <strong>📦 构建可维护的规则集</strong>
+          <p>用工程化方法预防规则失效。</p>
+        </a>
+      </div>
+    </section>
+  </div>
+
+  <footer>
+    <p>© 2026 Clash 下载站 · 基于开源项目 Clash 构建 · <a href="https://clashforwinodws.github.io/Clash-for-Winodows/">clashforwinodws.github.io</a></p>
+    <p style="margin-top:0.4rem;">本站仅提供客户端下载与使用教程，不提供任何代理服务。</p>
+  </footer>
+
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Article",
+      "headline": "明明写了直连规则，为什么流量仍然进入代理？",
+      "author": {
+        "@type": "Organization",
+        "name": "Clashforwindows"
+      },
+      "datePublished": "2026-09-29",
+      "description": "系统解剖 Clash 直连规则失效的十种原因：规则顺序被前置覆盖、DOMAIN 与 DOMAIN-SUFFIX 语义误用、fake-ip 与 redir-host 匹配对象差异、连接复用延续旧规则、TUN 模式劫持、IPv6 漏网、策略组嵌套、rule-provider 静默加载失败、DNS 解析异常与多客户端叠加，并提供完整的诊断决策树与预防性设计原则。",
+      "image": "https://clashforwinodws.github.io/Clash-for-Winodows/favicon.ico",
+      "publisher": {
+        "@type": "Organization",
+        "name": "Clashforwindows",
+        "logo": {
+          "@type": "ImageObject",
+          "url": "https://clashforwinodws.github.io/Clash-for-Winodows/favicon.ico"
+        }
+      }
+    }
+  </script>
+</body>
+</html>
